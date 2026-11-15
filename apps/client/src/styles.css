@@ -2357,7 +2357,7 @@ p {
   overflow: auto;
 }
 .lunar-task-area > * {
-  width: min(1100px, 100%);
+  width: min(1240px, 100%);
 }
 .rival-status {
   display: flex;

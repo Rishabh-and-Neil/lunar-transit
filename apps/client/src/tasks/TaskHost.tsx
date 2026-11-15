@@ -1,5 +1,5 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { LUNAR_TASKS } from "@sm/shared";
+import { LUNAR_TASKS, NASA_SOURCES } from "@sm/shared";
 import type { PublicTaskInstance, TaskSubmission } from "@sm/shared";
 import { cssVars, seededRandom } from "./taskTypes";
 import "./tasks.css";
@@ -94,7 +94,6 @@ export function TaskHost(props: TaskHostProps) {
   const [failed, setFailed] = useState(false);
   const [shaking, setShaking] = useState(false);
   const [hintOpen, setHintOpen] = useState(false);
-  const [scienceOpen, setScienceOpen] = useState(false);
   const prevAttempts = useRef(attempts);
   const key = instanceKey(task);
 
@@ -153,6 +152,8 @@ export function TaskHost(props: TaskHostProps) {
 
   return (
     <div className="task-overlay" role="region" aria-labelledby="task-title">
+      <div className="task-layout">
+      <ScienceSidebar taskId={task.taskId} />
       <section className={panelClass}>
         <header className="task-header">
           <div className="task-icon" aria-hidden="true">
@@ -172,16 +173,8 @@ export function TaskHost(props: TaskHostProps) {
 
         <p className="task-instructions">{def.instructions}</p>
 
-        <div className="task-info-row">
-          <button
-            type="button"
-            className="task-chip"
-            aria-expanded={scienceOpen}
-            onClick={() => setScienceOpen((o) => !o)}
-          >
-            <span aria-hidden="true">🧪</span> The science
-          </button>
-          {task.hint !== undefined && (
+        {task.hint !== undefined && (
+          <div className="task-info-row">
             <button
               type="button"
               className={`task-chip task-chip--hint${hintOpen ? " task-chip--active" : ""}`}
@@ -190,9 +183,8 @@ export function TaskHost(props: TaskHostProps) {
             >
               <span aria-hidden="true">💡</span> {hintOpen ? "Hide hint" : "Hint"}
             </button>
-          )}
-        </div>
-        {scienceOpen && <p className="task-science">{def.scienceExplanation}</p>}
+          </div>
+        )}
         {hintOpen && task.hint !== undefined && <p className="task-hint">{task.hint}</p>}
 
         <div className={`task-body${completed ? " task-body--locked" : ""}`} aria-disabled={completed}>
@@ -248,7 +240,43 @@ export function TaskHost(props: TaskHostProps) {
           </div>
         )}
       </section>
+      </div>
     </div>
+  );
+}
+
+/** Always-visible explanation of the real science behind the current task, with its NASA sources. */
+function ScienceSidebar(props: { taskId: PublicTaskInstance["taskId"] }) {
+  const def = LUNAR_TASKS[props.taskId];
+  const sources = def.sourceIds
+    .map((id) => NASA_SOURCES.find((s) => s.id === id))
+    .filter((s): s is (typeof NASA_SOURCES)[number] => s !== undefined);
+  return (
+    <aside className="task-science-panel" aria-label="The science behind this task">
+      <p className="task-science-kicker">
+        <span aria-hidden="true">🧪</span> The science
+      </p>
+      <h3 className="task-science-title">{def.title}</h3>
+      <p className="task-science-text">{def.scienceExplanation}</p>
+      {sources.length > 0 && (
+        <div className="task-science-sources">
+          <p className="task-science-sources-label">Based on NASA resources</p>
+          <ul>
+            {sources.map((s) => (
+              <li key={s.id}>
+                {s.officialUrl ? (
+                  <a href={s.officialUrl} target="_blank" rel="noopener noreferrer">
+                    {s.title}
+                  </a>
+                ) : (
+                  s.title
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </aside>
   );
 }
 

@@ -1478,3 +1478,98 @@
   25% { transform: rotate(-2deg); }
   75% { transform: rotate(2deg); }
 }
+
+/* ==========================================================================
+   Science sidebar: always visible to the left of the task (stacks on narrow screens)
+   ========================================================================== */
+.task-layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) minmax(0, 900px);
+  gap: 16px;
+  align-items: start;
+  justify-content: center;
+  width: 100%;
+  margin: auto 0;
+}
+.task-layout > .task-host {
+  margin: 0;
+}
+.task-science-panel {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid var(--t-border);
+  border-left: 3px solid var(--t-accent);
+  border-radius: 16px;
+  background:
+    linear-gradient(170deg, rgba(79, 195, 255, 0.1), transparent 55%),
+    var(--t-panel);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  animation: task-fade-in 0.45s ease-out;
+}
+.task-science-kicker {
+  margin: 0;
+  font-family: var(--t-head);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--t-accent);
+}
+.task-science-title {
+  margin: 0;
+  font-family: var(--t-head);
+  font-size: 16px;
+  line-height: 1.3;
+  color: var(--t-text);
+}
+.task-science-text {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--t-text);
+  opacity: 0.92;
+}
+.task-science-sources {
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--t-border);
+}
+.task-science-sources-label {
+  margin: 0 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--t-muted);
+}
+.task-science-sources ul {
+  margin: 0;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--t-muted);
+}
+.task-science-sources a {
+  color: var(--t-accent);
+  text-decoration: none;
+}
+.task-science-sources a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 1000px) {
+  .task-layout {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 900px;
+  }
+  .task-science-panel {
+    position: static;
+    padding: 14px;
+  }
+}
