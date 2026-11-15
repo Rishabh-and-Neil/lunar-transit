@@ -3092,3 +3092,30 @@ p {
     padding: 10px 12px;
   }
 }
+
+/* ---------------------------------------------- shop layout polish */
+/* Sound buttons + SI label sit in the empty header row (left of the difficulty picker), clear of the ship panel */
+.screen-preparation ~ .global-controls {
+  top: calc(22px + var(--safe-top));
+  right: 280px;
+  bottom: auto;
+  flex-direction: row;
+  align-items: center;
+}
+@media (max-width: 900px) {
+  .screen-preparation ~ .global-controls {
+    top: auto;
+    right: 8px;
+    bottom: calc(8px + var(--safe-bottom));
+  }
+}
+/* Spotlight drawn just inside the element so scroll containers can't clip it */
+.tour-focus {
+  outline-offset: -3px !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 194, 75, 0.35), 0 0 18px rgba(255, 194, 75, 0.25);
+}
+/* Tutorial card fits exactly inside the ship preview box */
+.screen-preparation ~ .tutorial-card.pos-right,
+.tutorial-card.pos-right {
+  top: calc(94px + var(--safe-top, 0px));
+}
