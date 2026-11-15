@@ -73,6 +73,19 @@ function createRoom(c: Probe, mode: "1v1" | "coop", name = "Host"): Promise<AckR
 function joinRoom(c: Probe, code: string, name = "Guest"): Promise<AckRes<RoomState>> {
   return new Promise((resolve) => c.socket.emit("room:join", { code, name }, resolve));
 }
+async function launchMatch(mode: "1v1" | "coop"): Promise<{ a: Probe; b: Probe; code: string }> {
+  const a = await connect(undefined, "Alpha");
+  const b = await connect(undefined, "Bravo");
+  const room = roomOf(await createRoom(a, mode, "Alpha"));
+  roomOf(await joinRoom(b, room.code, "Bravo"));
+  await a.next("match:snapshot");
+  a.socket.emit("player:ready", { commandId: `ra-${room.code}`, ready: true });
+  b.socket.emit("player:ready", { commandId: `rb-${room.code}`, ready: true });
+  await a.next("match:countdown");
+  await b.next("match:countdown");
+  return { a, b, code: room.code };
+}
+
 function roomOf(res: AckRes<RoomState>): RoomState {
   if (!res.ok || !res.data) throw new Error(`expected ok ack, got ${JSON.stringify(res)}`);
   return res.data;
@@ -234,5 +247,76 @@ describe("multiplayer server", () => {
     expect(restored?.players.find((p) => p.id === b.sessionId)?.connected).toBe(true);
     const snap = await b2.next<PublicMatchSnapshot>("match:snapshot");
     expect(snap.viewerId).toBe(b.sessionId);
+  });
+
+  it("leaving a launched match cancels it for the other player and closes the room", async () => {
+    const { a, b, code } = await launchMatch("1v1");
+    a.socket.emit("room:leave");
+
+    const result = await b.next<{ outcome: { kind: string; reason?: string } }>("match:result");
+    expect(result.outcome.kind).toBe("abandoned");
+    expect(result.outcome.reason).toMatch(/Alpha left the match/);
+
+    // The leaver cannot get back in, by code or by reconnecting.
+    const rejoin = await joinRoom(a, code, "Alpha");
+    expect(rejoin.ok).toBe(false);
+    const a2 = await connect(a.sessionId, "Alpha");
+    expect(await a2.next<RoomState | null>("room:state")).toBeNull();
+  });
+
+  it("co-op: a crewmate leaving mid-mission cancels the shared mission", async () => {
+    const { a, b } = await launchMatch("coop");
+    b.socket.emit("room:leave");
+    const result = await a.next<{ outcome: { kind: string; reason?: string } }>("match:result");
+    expect(result.outcome.kind).toBe("abandoned");
+    expect(result.outcome.reason).toMatch(/Bravo left the mission/);
+  });
+
+  it("leaving during preparation keeps the other player in the room", async () => {
+    const a = await connect(undefined, "Alpha");
+    const b = await connect(undefined, "Bravo");
+    const room = roomOf(await createRoom(a, "1v1", "Alpha"));
+    roomOf(await joinRoom(b, room.code, "Bravo"));
+    await a.next("match:snapshot");
+    b.socket.emit("room:leave");
+    const state = await a.next<RoomState | null>("room:state", (r) => !!r && r.players.length === 1);
+    expect(state?.code).toBe(room.code);
+    expect(a.events.some((e) => e.name === "match:result")).toBe(false);
+  });
+
+  it("a player who drops mid-match and does not return in time cancels it", async () => {
+    const short = await startServer(0, { log: () => undefined, disconnectGraceMs: 300 });
+    const saved = url;
+    url = `http://localhost:${short.port}`;
+    try {
+      const { a, b } = await launchMatch("1v1");
+      b.socket.disconnect();
+      const result = await a.next<{ outcome: { kind: string; reason?: string } }>("match:result", () => true, 3000);
+      expect(result.outcome.kind).toBe("abandoned");
+      expect(result.outcome.reason).toMatch(/Bravo lost connection/);
+    } finally {
+      url = saved;
+      await short.close();
+    }
+  });
+
+  it("a player who reconnects within the grace period keeps the match going", async () => {
+    const short = await startServer(0, { log: () => undefined, disconnectGraceMs: 1500 });
+    const saved = url;
+    url = `http://localhost:${short.port}`;
+    try {
+      const { a, b } = await launchMatch("1v1");
+      b.socket.disconnect();
+      await new Promise((r) => setTimeout(r, 200));
+      const b2 = await connect(b.sessionId, "Bravo");
+      expect((await b2.next<RoomState | null>("room:state"))?.players.length).toBe(2);
+      await new Promise((r) => setTimeout(r, 1800)); // past the original grace window
+      expect(a.events.some((e) => e.name === "match:result")).toBe(false);
+      const snap = await b2.next<PublicMatchSnapshot>("match:snapshot");
+      expect(snap.status === "countdown" || snap.status === "active").toBe(true);
+    } finally {
+      url = saved;
+      await short.close();
+    }
   });
 });

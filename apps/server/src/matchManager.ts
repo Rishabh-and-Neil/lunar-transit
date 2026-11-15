@@ -150,6 +150,26 @@ export class MatchManager {
     }
   }
 
+  /**
+   * Cancel a running match: mark it abandoned with `reason`, send every player a final snapshot and
+   * result (so the remaining player sees why it ended), then dispose of it. No-op if already finished.
+   */
+  cancel(matchId: string | undefined, reason: string): boolean {
+    const e = this.get(matchId);
+    if (!e || e.finished) return false;
+    try {
+      e.state = abandonMatch(e.state, reason);
+    } catch (err) {
+      this.log(`[match] ${e.id} cancel failed: ${errMsg(err)}`);
+      this.dispose(e.id);
+      return false;
+    }
+    this.log(`[match] ${e.id} cancelled (${reason})`);
+    this.broadcastSnapshots(e);
+    this.finish(e);
+    return true;
+  }
+
   /** Abandon (if still running) and delete. */
   abandonAndDispose(matchId: string | undefined, reason: string): void {
     const e = this.get(matchId);

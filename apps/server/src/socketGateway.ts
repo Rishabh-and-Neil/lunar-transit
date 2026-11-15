@@ -20,6 +20,8 @@ export interface GatewayOptions {
   /** Rooms with no connected players are removed after this long. */
   emptyRoomTtlMs?: number;
   finishedRetentionMs?: number;
+  /** A player who drops mid-match has this long to reconnect before the match is cancelled. */
+  disconnectGraceMs?: number;
   log?: (line: string) => void;
 }
 
@@ -42,10 +44,14 @@ export class SocketGateway {
   readonly matches: MatchManager;
   private readonly sessions = new Map<string, Session>();
   private readonly emptyRoomTtlMs: number;
+  private readonly disconnectGraceMs: number;
+  /** Pending "cancel the match unless they come back" timers, by player id. */
+  private readonly dropTimers = new Map<string, ReturnType<typeof setTimeout>>();
   private readonly log: (line: string) => void;
 
   constructor(private readonly io: IO, opts: GatewayOptions = {}) {
     this.emptyRoomTtlMs = opts.emptyRoomTtlMs ?? 60_000;
+    this.disconnectGraceMs = opts.disconnectGraceMs ?? 20_000;
     this.log = opts.log ?? ((line) => console.log(line));
     const channel: PlayerChannel = {
       snapshot: (id, s) => void this.io.to(playerChannel(id)).emit("match:snapshot", s),
@@ -83,6 +89,8 @@ export class SocketGateway {
   }
 
   close(): void {
+    for (const t of this.dropTimers.values()) clearTimeout(t);
+    this.dropTimers.clear();
     this.matches.closeAll();
   }
 
@@ -104,6 +112,7 @@ export class SocketGateway {
     socket.emit("session:welcome", { playerId });
 
     // Restore room / match on reconnect.
+    this.clearDropTimer(playerId);
     const room = this.rooms.getByPlayer(playerId);
     if (room) {
       void socket.join(roomChannel(room.code));
@@ -165,7 +174,53 @@ export class SocketGateway {
     if (room) {
       this.matches.setConnected(room.matchId, playerId, false);
       this.broadcastRoom(room);
+      if (this.hasLiveMatch(room)) {
+        // Give an accidental refresh / network blip a moment; otherwise cancel for the other player.
+        this.clearDropTimer(playerId);
+        const timer = setTimeout(() => {
+          this.dropTimers.delete(playerId);
+          const r = this.rooms.getByPlayer(playerId);
+          const still = r?.players.find((p) => p.id === playerId);
+          if (r && still && !still.connected && this.hasLiveMatch(r)) {
+            this.cancelRoomMatch(r, session.name, "lost connection");
+          }
+        }, this.disconnectGraceMs);
+        timer.unref?.();
+        this.dropTimers.set(playerId, timer);
+      }
     }
+  }
+
+  private clearDropTimer(playerId: string): void {
+    const t = this.dropTimers.get(playerId);
+    if (t) clearTimeout(t);
+    this.dropTimers.delete(playerId);
+  }
+
+  /** A match that has launched (countdown or flight/tasks) and not finished. */
+  private hasLiveMatch(room: Room): boolean {
+    const m = this.matches.get(room.matchId);
+    return !!m && !m.finished && m.state.status !== "preparation";
+  }
+
+  /**
+   * A player left a launched match: cancel it for everyone (the remaining player gets a
+   * "mission aborted" result explaining why) and close the room so nobody can rejoin it.
+   */
+  private cancelRoomMatch(room: Room, leaverName: string, how: "left" | "lost connection"): void {
+    const what = room.mode === "coop" ? "mission" : "match";
+    const reason =
+      how === "left"
+        ? `${leaverName} left the ${what}, so it was cancelled.`
+        : `${leaverName} lost connection, so the ${what} was cancelled.`;
+    this.matches.cancel(room.matchId, reason);
+    for (const p of room.players) {
+      this.clearDropTimer(p.id);
+      const s = this.sessions.get(p.id);
+      if (s) void s.socket.leave(roomChannel(room.code));
+    }
+    this.rooms.delete(room);
+    this.log(`[room] ${room.code} closed: ${reason}`);
   }
 
   // ---- rooms ---------------------------------------------------------------
@@ -248,12 +303,21 @@ export class SocketGateway {
     this.broadcastRoom(room);
   }
 
-  /** Leave the current room (if any). Mid-match the player is marked disconnected; the match continues. */
+  /**
+   * Leave the current room (if any). Leaving a launched match cancels it for the other player and
+   * closes the room, so the leaver cannot come back. Leaving in preparation returns the other player
+   * to the lobby to wait for someone new.
+   */
   private leaveRoom(session: Session): void {
     const { playerId, socket } = session;
     this.queues.remove(playerId);
     const room = this.rooms.getByPlayer(playerId);
     if (!room) {
+      socket.emit("room:state", null);
+      return;
+    }
+    if (this.hasLiveMatch(room)) {
+      this.cancelRoomMatch(room, session.name, "left");
       socket.emit("room:state", null);
       return;
     }
