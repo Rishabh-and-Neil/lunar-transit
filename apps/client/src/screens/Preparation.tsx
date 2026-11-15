@@ -72,14 +72,14 @@ function EquipmentCard(props: {
   short: string;
   effects: string[];
   educationKey?: AttachmentId | "repair-drone";
+  onInspect?: (key: AttachmentId | "repair-drone" | null) => void;
 }) {
   const { id } = props;
   const hint = useGameStore(useShallow((s) => (s.snapshot ? purchaseHint(s.snapshot, id) : NO_HINT)));
   const buying = useGameStore(isPending(`buy:${id}`));
   const selling = useGameStore(isPending(`sell:${id}`));
   const ready = useGameStore((s) => viewerPlayer(s.snapshot)?.ready ?? false);
-  const [open, setOpen] = useState(false);
-  const edu = props.educationKey ? ATTACHMENT_EDUCATION.find((e) => e.attachmentId === props.educationKey) : undefined;
+  const inspect = () => props.onInspect?.(props.educationKey ?? null);
   if (hint === NO_HINT) return null;
   const owned = hint.owned;
   const busy = buying || selling;
@@ -89,7 +89,12 @@ function EquipmentCard(props: {
   const sellBlocked = id === "repair-drone" && useGameStore.getState().snapshot?.spacecraft.some((s) => s.repairUpgraded);
 
   return (
-    <div className={`eq-card ${owned ? "owned" : ""} ${!owned && !hint.canBuy ? "locked" : ""} ${open ? "open" : ""}`}>
+    <div
+      className={`eq-card ${owned ? "owned" : ""} ${!owned && !hint.canBuy ? "locked" : ""}`}
+      onMouseEnter={inspect}
+      onFocus={inspect}
+      onPointerDown={inspect}
+    >
       <div className="eq-top">
         <span className="eq-icon">{props.icon}</span>
         <div className="eq-title">
@@ -109,23 +114,6 @@ function EquipmentCard(props: {
           </span>
         ))}
       </div>
-      {edu && (
-        <button className="eq-learn" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
-          {open ? "▾ Hide science" : "▸ The real science"}
-        </button>
-      )}
-      {edu && open && (
-        <div className="eq-edu">
-          <p>{edu.explanation}</p>
-          <p>
-            <b>Principle:</b> {edu.realWorldPrinciple}
-          </p>
-          <p className="muted">
-            <b>In game:</b> {edu.gameplayAbstraction}
-          </p>
-          {edu.sourceIds.length > 0 && <p className="eq-src">Source: {edu.sourceIds.map(sourceTitle).join(" · ")}</p>}
-        </div>
-      )}
       <div className="eq-actions">
         {owned ? (
           <>
@@ -160,7 +148,7 @@ function EquipmentCard(props: {
   );
 }
 
-function ShopTab({ tab }: { tab: Tab }) {
+function ShopTab({ tab, onInspect }: { tab: Tab; onInspect: (key: AttachmentId | "repair-drone" | null) => void }) {
   if (tab === "repair") {
     return (
       <div className="eq-grid">
@@ -171,6 +159,7 @@ function ShopTab({ tab }: { tab: Tab }) {
           short={`Heal ${REPAIR.base.heal} HP over ${REPAIR.base.durationMs / 1000}s · cooldown ${REPAIR.base.cooldownMs / 1000}s`}
           effects={[`Repairs cost ${REPAIR.baseCost}, ${REPAIR.baseCost + REPAIR.costStep}, ${REPAIR.baseCost + 2 * REPAIR.costStep}…`]}
           educationKey="repair-drone"
+          onInspect={onInspect}
         />
         <EquipmentCard
           id="repair-upgrade"
@@ -178,6 +167,7 @@ function ShopTab({ tab }: { tab: Tab }) {
           icon="⚙️"
           short={`Heal ${REPAIR.upgraded.heal} HP in ${REPAIR.upgraded.durationMs / 1000}s · cooldown ${REPAIR.upgraded.cooldownMs / 1000}s`}
           effects={["Also purchasable in flight"]}
+          onInspect={onInspect}
         />
       </div>
     );
@@ -187,8 +177,35 @@ function ShopTab({ tab }: { tab: Tab }) {
     <div className="eq-grid">
       {ids.map((id) => {
         const a = ATTACHMENTS[id];
-        return <EquipmentCard key={id} id={id} name={a.name} icon={a.icon} short={a.short} effects={attachmentEffects(id)} educationKey={id} />;
+        return <EquipmentCard key={id} id={id} name={a.name} icon={a.icon} short={a.short} effects={attachmentEffects(id)} educationKey={id} onInspect={onInspect} />;
       })}
+    </div>
+  );
+}
+
+/** "The real science" for the part the player is hovering over (or last tapped), shown under the category. */
+function SciencePanel({ edKey }: { edKey: AttachmentId | "repair-drone" | null }) {
+  const edu = edKey ? ATTACHMENT_EDUCATION.find((e) => e.attachmentId === edKey) : undefined;
+  const name = edKey === "repair-drone" ? "Repair Drone" : edKey ? ATTACHMENTS[edKey].name : "";
+  if (!edu) {
+    return (
+      <div className="eq-science empty" aria-live="polite">
+        <span className="eq-science-kicker">🧪 The real science</span>
+        <p className="muted">Hover over a part to see the real engineering behind it.</p>
+      </div>
+    );
+  }
+  return (
+    <div className="eq-science" aria-live="polite">
+      <span className="eq-science-kicker">🧪 The real science · {name}</span>
+      <p>{edu.explanation}</p>
+      <p>
+        <b>Principle:</b> {edu.realWorldPrinciple}
+      </p>
+      <p className="muted">
+        <b>In game:</b> {edu.gameplayAbstraction}
+      </p>
+      {edu.sourceIds.length > 0 && <p className="eq-src">Source: {edu.sourceIds.map(sourceTitle).join(" · ")}</p>}
     </div>
   );
 }
@@ -293,6 +310,7 @@ function ReadyPanel() {
 
 export function Preparation() {
   const [tab, setTab] = useState<Tab>("propulsion");
+  const [inspected, setInspected] = useState<AttachmentId | "repair-drone" | null>(null);
   const mode = useGameStore((s) => s.snapshot?.mode ?? "solo");
   const difficulty = useGameStore((s) => s.snapshot?.difficulty ?? "normal");
   const tutorial = useGameStore((s) => s.snapshot?.tutorial ?? false);
@@ -339,6 +357,7 @@ export function Preparation() {
                 onClick={() => {
                   playSfx("click");
                   setTab(t);
+                  setInspected(null);
                 }}
               >
                 <span>{TAB_META[t].icon}</span> {TAB_META[t].label}
@@ -347,8 +366,9 @@ export function Preparation() {
           </nav>
           <p className="tab-blurb muted">{TAB_META[tab].blurb}</p>
           <div className="prep-shop-scroll">
-            <ShopTab tab={tab} />
+            <ShopTab tab={tab} onInspect={setInspected} />
           </div>
+          <SciencePanel edKey={inspected} />
           <p className="muted small">
             {ATTACHMENT_CATEGORIES.length * 4} attachments · selling during preparation refunds in full · base power capacity {SPACECRAFT.basePowerCapacity} W
           </p>
