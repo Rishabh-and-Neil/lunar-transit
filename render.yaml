@@ -1,0 +1,12 @@
+# Single Render web service: Node serves the multiplayer Socket.IO server AND the built web client.
+services:
+  - type: web
+    name: lunar-transit
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm run start -w apps/server
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"

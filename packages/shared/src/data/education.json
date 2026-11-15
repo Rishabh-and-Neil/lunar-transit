@@ -1,0 +1,93 @@
+[
+  {
+    "attachmentId": "whipple-shield",
+    "explanation": "A Whipple shield is a thin outer 'bumper' wall mounted a short distance away from the main spacecraft wall to protect against tiny, very fast particles.",
+    "realWorldPrinciple": "When a small, fast particle hits the thin bumper it breaks apart, and the fragments spread out across the gap, so the main wall receives a wider, weaker spray instead of one concentrated hit. Shields of this type are named after astronomer Fred Whipple, who proposed the idea in the 1940s.",
+    "gameplayAbstraction": "In the game the shield is a single upgrade that removes a flat percentage of 'impact' damage. Real shields are designed for specific particle sizes and speeds and do not reduce damage by a fixed percentage. The cost, mass and percentage are game-balance values, not NASA data.",
+    "sourceIds": []
+  },
+  {
+    "attachmentId": "radiation-vault",
+    "explanation": "A radiation vault is a heavily shielded box that surrounds the most sensitive electronics instead of shielding the whole spacecraft.",
+    "realWorldPrinciple": "Putting dense shielding only around critical electronics saves mass compared with shielding everything. Engineers also choose radiation-tolerant parts and test them, and CubeSat 101 lists radiation testing among the leading technology-development topics for CubeSat missions.",
+    "gameplayAbstraction": "The game turns radiation protection into a flat reduction of 'radiation' damage from solar flares and the Van Allen belts. Real radiation effects build up over time or cause sudden glitches in electronics; they do not reduce a hit-point bar. The power draw and numbers are invented for balance.",
+    "sourceIds": ["cubesat-101"]
+  },
+  {
+    "attachmentId": "thermal-blanket",
+    "explanation": "Multi-layer insulation (MLI) is the shiny, crinkly blanket seen on many spacecraft. It is made of many thin reflective layers.",
+    "realWorldPrinciple": "In a vacuum, heat moves mainly by radiation. Stacks of thin reflective layers block radiated heat, keeping a spacecraft from overheating in sunlight or freezing in shadow. Thermal control is one of the engineering disciplines in NASA Goddard's Mission Design Lab studies.",
+    "gameplayAbstraction": "The game models MLI as a fixed percentage reduction of 'thermal' damage. Real thermal design keeps every component inside its allowed temperature range using insulation, coatings, radiators and heaters; spacecraft do not take thermal 'damage' points. Values are game-balance numbers.",
+    "sourceIds": ["mission-design-lab"]
+  },
+  {
+    "attachmentId": "magnetic-deflector",
+    "explanation": "An active magnetic deflector is a speculative idea: a powered magnetic field that pushes charged particles away from the spacecraft.",
+    "realWorldPrinciple": "Magnetic fields do bend the paths of charged particles; Earth's own magnetic field shields us from much of the solar wind. Researchers have studied artificial magnetic shields for spacecraft, but they are not a flight-ready technology.",
+    "gameplayAbstraction": "This attachment is mostly fictional. No current spacecraft carries a deflector that reduces impact, radiation and thermal damage at the same time. Its broad protection and high power draw are game-design choices, not NASA data.",
+    "sourceIds": []
+  },
+  {
+    "attachmentId": "ion-thruster",
+    "explanation": "An ion thruster uses electricity to accelerate charged atoms (ions) of a propellant gas such as xenon to very high speed.",
+    "realWorldPrinciple": "Ion thrusters are very fuel-efficient but produce only a gentle push, so they run for months to build up speed, and they need a lot of electrical power. Propulsion and power are separate disciplines that mission designers must balance together.",
+    "gameplayAbstraction": "In the game the ion thruster gives an instant thrust bonus and a large power draw. Real ion propulsion gives tiny thrust and is useful over long burn times rather than quick sprints. Bonus, cost and power numbers are invented for balance.",
+    "sourceIds": ["mission-design-lab"]
+  },
+  {
+    "attachmentId": "chemical-booster",
+    "explanation": "A bipropellant engine burns a fuel and a separate oxidizer together to make hot, high-pressure gas that rushes out of a nozzle.",
+    "realWorldPrinciple": "Chemical rockets give strong thrust quickly, which is why they are used for big maneuvers such as entering lunar orbit, but they need heavy tanks of propellant. Mission designers plan these engine burns with trajectory tools such as GMAT.",
+    "gameplayAbstraction": "The game turns the booster into a permanent percentage speed bonus with extra mass. Real spacecraft do not 'cruise' faster by carrying a bigger engine; they change velocity in planned burns. All numbers are game balance values.",
+    "sourceIds": ["gmat", "mission-design-lab"]
+  },
+  {
+    "attachmentId": "solar-sail",
+    "explanation": "A solar sail is a huge, very thin reflective sheet that is pushed by sunlight, so it needs no propellant at all.",
+    "realWorldPrinciple": "Light carries momentum, and reflecting it gives a tiny but constant push. The Planetary Society's LightSail CubeSat, launched through NASA's CubeSat Launch Initiative, tested deploying a 32-square-meter sail from a spacecraft about the size of a loaf of bread.",
+    "gameplayAbstraction": "In the game the sail is a small, nearly weightless thrust bonus. A real sail's push depends on its size, its angle to the Sun and its distance from the Sun, and is far gentler than a rocket. Numbers are game balance values.",
+    "sourceIds": ["cubesat-101"]
+  },
+  {
+    "attachmentId": "cold-gas-rcs",
+    "explanation": "A cold-gas reaction control system (RCS) releases stored pressurized gas through small nozzles to nudge and rotate a spacecraft.",
+    "realWorldPrinciple": "Cold-gas thrusters are simple and reliable but weak, so they are used for small attitude adjustments rather than big orbit changes. Attitude control keeps a spacecraft pointed in the right direction, which CubeSat 101 describes as critical for mission success.",
+    "gameplayAbstraction": "The game uses the RCS to resist slowdowns from 'jammers' and navigation anomalies. Those enemy effects are fictional, and the resistance percentage is a game-balance value.",
+    "sourceIds": ["cubesat-101", "mission-design-lab"]
+  },
+  {
+    "attachmentId": "star-tracker",
+    "explanation": "A star tracker is a small camera that photographs the star field and compares it with a star catalog to work out which way the spacecraft is pointing.",
+    "realWorldPrinciple": "Star trackers are a key sensor in an attitude determination and control system (ADCS), which stabilizes and orients a spacecraft. Knowing orientation precisely is essential for pointing antennas, instruments and solar panels.",
+    "gameplayAbstraction": "In the game the star tracker gives extra hazard warning time and reduces slowdowns. Real star trackers measure orientation; they do not detect incoming hazards. Values are game-balance numbers.",
+    "sourceIds": ["cubesat-101"]
+  },
+  {
+    "attachmentId": "solar-array",
+    "explanation": "A deployable solar array unfolds after launch to expose more solar cells to the Sun and generate more electrical power.",
+    "realWorldPrinciple": "CubeSat 101 notes that many CubeSats use deployable solar panels to increase Sun exposure; on one example spacecraft they were expected to nearly double the power input. Engineers then balance generated power against what every subsystem needs.",
+    "gameplayAbstraction": "The game adds a flat amount of 'power capacity'. Real array output changes with Sun angle, distance from the Sun, shadowing and aging, and batteries cover periods without sunlight. The capacity bonus is a game-balance value.",
+    "sourceIds": ["cubesat-101", "mission-design-lab"]
+  },
+  {
+    "attachmentId": "deep-space-transponder",
+    "explanation": "A transponder is a radio that receives signals from Earth and sends data and replies back, letting controllers command the spacecraft and track it.",
+    "realWorldPrinciple": "Every mission needs a working radio link and a ground station to receive it; CubeSat 101 warns that launching with an inadequate ground station is a mission killer, and most CubeSats need a radio license to transmit.",
+    "gameplayAbstraction": "In the game the transponder earns credits for 'science telemetry' during flight. Real missions do not earn money per second; the credit income is purely a game mechanic.",
+    "sourceIds": ["cubesat-101"]
+  },
+  {
+    "attachmentId": "spectrometer",
+    "explanation": "A spectrometer splits incoming light into its wavelengths so scientists can identify what materials are present.",
+    "realWorldPrinciple": "Different materials reflect and absorb light differently at different wavelengths. NASA's telescope learning game shows that choosing the right wavelengths and instruments is driven by the science question you want to answer.",
+    "gameplayAbstraction": "In the game the spectrometer unlocks a hint for your lunar task. The surface readings in the Surface Analysis task are generated by the game, not real lunar measurements.",
+    "sourceIds": ["telescope-learning-game"]
+  },
+  {
+    "attachmentId": "repair-drone",
+    "explanation": "The repair drone is a small robotic helper that patches the spacecraft's hull during flight.",
+    "realWorldPrinciple": "Robotic servicing of spacecraft in orbit is an active area of research and demonstration, but today most robotic spacecraft cannot be repaired after launch. That is why engineers rely on careful design and ground testing, such as the vibration and thermal vacuum tests described in CubeSat 101.",
+    "gameplayAbstraction": "The repair drone is fictional. Spacecraft do not have hit points that a drone can restore over a few seconds, and the repair costs, timing and upgrades are game mechanics.",
+    "sourceIds": ["cubesat-101"]
+  }
+]

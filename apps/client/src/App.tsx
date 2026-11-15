@@ -1,0 +1,104 @@
+import { Component, type ErrorInfo, type ReactNode } from "react";
+import { SpaceScene } from "./scene/SpaceScene";
+import { useGameStore, dismissToast, setModal } from "./state/gameStore";
+import { viewerShip } from "./state/selectors";
+import { MainMenu } from "./screens/MainMenu";
+import { Lobby } from "./screens/Lobby";
+import { Preparation } from "./screens/Preparation";
+import { Loading } from "./screens/Loading";
+import { GameScreen } from "./screens/GameScreen";
+import { Results } from "./screens/Results";
+import { PersonalBestsModal } from "./screens/PersonalBests";
+import { AboutModal } from "./screens/About";
+import { TutorialOverlay } from "./screens/Tutorial";
+import { MuteToggle } from "./hud/ui";
+
+type SceneVariant = "menu" | "flight" | "arrival";
+
+function useSceneVariant(): SceneVariant {
+  return useGameStore((s) => {
+    if (s.screen === "game" || s.screen === "results") {
+      const ship = viewerShip(s.snapshot);
+      if (!ship) return "flight";
+      if (ship.phase === "lunar-task" || ship.phase === "task-complete") return "arrival";
+      if (s.screen === "results") return ship.phase === "destroyed" ? "menu" : "arrival";
+      return "flight";
+    }
+    if (s.screen === "loading") return "flight";
+    return "menu";
+  });
+}
+
+/** Keeps a crashing 3D scene from taking the whole UI down. */
+class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  override state = { failed: false };
+  static getDerivedStateFromError(): { failed: boolean } {
+    return { failed: true };
+  }
+  override componentDidCatch(error: Error, info: ErrorInfo): void {
+    console.error("[SpaceScene] crashed", error, info.componentStack);
+  }
+  override render(): ReactNode {
+    return this.state.failed ? <div className="scene-fallback" /> : this.props.children;
+  }
+}
+
+function Toasts() {
+  const toasts = useGameStore((s) => s.toasts);
+  return (
+    <div className="toasts" aria-live="polite">
+      {toasts.map((t) => (
+        <button key={t.id} className={`toast toast-${t.kind}`} onClick={() => dismissToast(t.id)}>
+          {t.text}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function CurrentScreen() {
+  const screen = useGameStore((s) => s.screen);
+  switch (screen) {
+    case "menu":
+      return <MainMenu />;
+    case "lobby":
+      return <Lobby />;
+    case "preparation":
+      return <Preparation />;
+    case "loading":
+      return <Loading />;
+    case "game":
+      return <GameScreen />;
+    case "results":
+      return <Results />;
+  }
+}
+
+export function App() {
+  const variant = useSceneVariant();
+  const screen = useGameStore((s) => s.screen);
+  const modal = useGameStore((s) => s.modal);
+  const tutorial = useGameStore((s) => s.tutorial);
+  return (
+    <>
+      <div className="scene-layer">
+        <div className="scene-fallback" />
+        <SceneBoundary>
+          <SpaceScene variant={variant} />
+        </SceneBoundary>
+      </div>
+      <div className={`screen-layer screen-${screen}`}>
+        <div className="screen-transition" key={screen}>
+          <CurrentScreen />
+        </div>
+      </div>
+      {tutorial && <TutorialOverlay />}
+      {modal === "bests" && <PersonalBestsModal onClose={() => setModal(null)} />}
+      {modal === "about" && <AboutModal onClose={() => setModal(null)} />}
+      <div className="global-controls">
+        <MuteToggle />
+      </div>
+      <Toasts />
+    </>
+  );
+}

@@ -1,0 +1,387 @@
+[
+  {
+    "id": "fact-lifecycle-phases",
+    "title": "Missions grow up in phases",
+    "text": "NASA projects move through a life cycle that starts with Pre-Phase A concept studies and continues through definition, design and development, and finally operations in Phase E.",
+    "topic": "mission-design",
+    "sourceIds": [
+      "design-science-missions"
+    ],
+    "sourceLocations": [
+      "Design and Develop Science Missions webinar slides (NTRS 20250002492), project life cycle section"
+    ]
+  },
+  {
+    "id": "fact-cml-definition",
+    "title": "How mature is your idea?",
+    "text": "JPL created Concept Maturity Levels (CMLs) to classify how mature a space mission concept is before it enters formal project formulation.",
+    "topic": "mission-design",
+    "sourceIds": [
+      "concept-maturity-levels"
+    ],
+    "sourceLocations": [
+      "Wessen et al. 2013, abstract (NTRS 20150007816)"
+    ]
+  },
+  {
+    "id": "fact-cml-matrix",
+    "title": "Maturity in many dimensions",
+    "text": "The CML matrix tracks a concept's maturity across several dimensions at once, including science objectives, mission design, technical risk, project organization and cost.",
+    "topic": "mission-design",
+    "sourceIds": [
+      "concept-maturity-levels"
+    ],
+    "sourceLocations": [
+      "Wessen et al. 2013, abstract (NTRS 20150007816)"
+    ]
+  },
+  {
+    "id": "fact-cml-prephase-a",
+    "title": "CMLs 1 to 4",
+    "text": "CMLs 1 through 4 describe the earliest, Pre-Phase A stage of a mission idea, before formal project formulation begins.",
+    "topic": "mission-design",
+    "sourceIds": [
+      "concept-maturity-levels"
+    ],
+    "sourceLocations": [
+      "Wessen et al. 2013, abstract (NTRS 20150007816)"
+    ]
+  },
+  {
+    "id": "fact-mdl-collaborative",
+    "title": "Designing together",
+    "text": "NASA Goddard's Mission Design Lab is a collaborative engineering environment where a team of specialists develops spaceflight mission and architecture concepts.",
+    "topic": "mission-design",
+    "sourceIds": [
+      "mission-design-lab"
+    ],
+    "sourceLocations": [
+      "Mission Design Lab page, introduction"
+    ]
+  },
+  {
+    "id": "fact-mdl-point-design",
+    "title": "A design in six days",
+    "text": "A Mission Design Lab point design study lasts about six days and produces products such as CAD models, a master equipment list and a cost estimate.",
+    "topic": "mission-design",
+    "sourceIds": [
+      "mission-design-lab"
+    ],
+    "sourceLocations": [
+      "Mission Design Lab page, 'Study types and timeframes' (Point Design Study)"
+    ]
+  },
+  {
+    "id": "fact-mdl-cml",
+    "title": "Studies matched to maturity",
+    "text": "Goddard's design studies can be tailored to help a concept mature anywhere from CML 1 to CML 4, from a one-hour brainstorm to a full point design.",
+    "topic": "mission-design",
+    "sourceIds": [
+      "mission-design-lab",
+      "concept-maturity-levels"
+    ],
+    "sourceLocations": [
+      "Mission Design Lab page, 'Range of study options' and 'Study types and timeframes'"
+    ]
+  },
+  {
+    "id": "fact-mdl-budgets",
+    "title": "Every subsystem has a budget",
+    "text": "During a Mission Design Lab study, each subsystem team produces its own design, trade studies, and estimates of mass, power and data rate, plus a risk assessment.",
+    "topic": "power",
+    "sourceIds": [
+      "mission-design-lab"
+    ],
+    "sourceLocations": [
+      "Mission Design Lab page, study process description"
+    ]
+  },
+  {
+    "id": "fact-mdl-disciplines",
+    "title": "A team of specialists",
+    "text": "Mission Design Lab engineers cover disciplines such as power systems, propulsion, thermal, communications, flight dynamics and attitude control.",
+    "topic": "propulsion",
+    "sourceIds": [
+      "mission-design-lab"
+    ],
+    "sourceLocations": [
+      "Mission Design Lab page, 'MDL Disciplines'"
+    ]
+  },
+  {
+    "id": "fact-mdl-lunar-orbits",
+    "title": "Orbits all the way to the Moon",
+    "text": "The Mission Design Lab designs orbits for many destinations, including low Earth orbit, geosynchronous orbit, libration points, lunar missions and deep space.",
+    "topic": "lunar-science",
+    "sourceIds": [
+      "mission-design-lab"
+    ],
+    "sourceLocations": [
+      "Mission Design Lab page, 'MDL Capabilities'"
+    ]
+  },
+  {
+    "id": "fact-gmat-what",
+    "title": "Free mission-design software",
+    "text": "GMAT, the General Mission Analysis Tool, is NASA's open-source software for space mission design, optimization and navigation.",
+    "topic": "navigation",
+    "sourceIds": [
+      "gmat"
+    ],
+    "sourceLocations": [
+      "NASA Software Catalog, GSC-19640-1 (GMAT R2026) description"
+    ]
+  },
+  {
+    "id": "fact-gmat-regimes",
+    "title": "From Earth orbit to the Moon and beyond",
+    "text": "GMAT supports missions in flight regimes ranging from low Earth orbit to lunar, libration point and deep-space missions.",
+    "topic": "lunar-science",
+    "sourceIds": [
+      "gmat"
+    ],
+    "sourceLocations": [
+      "NASA Software Catalog, GSC-19640-1 description; GMAT Wiki Home"
+    ]
+  },
+  {
+    "id": "fact-gmat-interfaces",
+    "title": "Click or code",
+    "text": "Mission designers can drive GMAT through a graphical interface, its own scripting language, or from Python or Java.",
+    "topic": "navigation",
+    "sourceIds": [
+      "gmat"
+    ],
+    "sourceLocations": [
+      "NASA Software Catalog, GSC-19640-1 description"
+    ]
+  },
+  {
+    "id": "fact-gmat-building-blocks",
+    "title": "Building a mission in software",
+    "text": "In GMAT you build a mission from resources such as spacecraft, propagators, estimators and optimizers to model, optimize and estimate trajectories.",
+    "topic": "navigation",
+    "sourceIds": [
+      "gmat"
+    ],
+    "sourceLocations": [
+      "GMAT Wiki Home (gmat.atlassian.net)"
+    ]
+  },
+  {
+    "id": "fact-gmat-maneuver-planning",
+    "title": "Planning engine burns",
+    "text": "Flight dynamics teams use GMAT for real operations: the GMAT Wiki notes that teams for missions such as the Roman Space Telescope plan to use it as their primary maneuver-planning tool.",
+    "topic": "propulsion",
+    "sourceIds": [
+      "gmat"
+    ],
+    "sourceLocations": [
+      "GMAT Wiki Home (gmat.atlassian.net), mission usage notes"
+    ]
+  },
+  {
+    "id": "fact-telescope-science-drives-design",
+    "title": "Science comes first",
+    "text": "NASA's telescope learning game teaches that science requirements drive a telescope mission's design and engineering: you pick a science question first, then the wavelengths, instruments and optics to answer it.",
+    "topic": "mission-design",
+    "sourceIds": [
+      "telescope-learning-game"
+    ],
+    "sourceLocations": [
+      "NASA Science 'Build It Yourself' game page, description"
+    ]
+  },
+  {
+    "id": "fact-telescope-viability",
+    "title": "Not every combination works",
+    "text": "In 'Build It Yourself', some instrument and optics options are unavailable because they would not be scientifically or technologically viable for the chosen science goal.",
+    "topic": "mission-design",
+    "sourceIds": [
+      "telescope-learning-game"
+    ],
+    "sourceLocations": [
+      "NASA Science 'Build It Yourself' game page, how-to-play notes"
+    ]
+  },
+  {
+    "id": "fact-webb-sunshield",
+    "title": "Webb's shade",
+    "text": "The James Webb Space Telescope's major subsystems include its mirrors, science instruments, spacecraft bus and a large sunshield.",
+    "topic": "shielding",
+    "sourceIds": [
+      "telescope-learning-game"
+    ],
+    "sourceLocations": [
+      "NASA Science 'Scope It Out' game page, Webb observatory topics"
+    ]
+  },
+  {
+    "id": "fact-cubesat-origin",
+    "title": "Born in a university lab",
+    "text": "CubeSats began in 1999 as a collaboration between Cal Poly San Luis Obispo and Stanford University to give university researchers affordable access to space.",
+    "topic": "mission-design",
+    "sourceIds": [
+      "cubesat-101"
+    ],
+    "sourceLocations": [
+      "CubeSat 101, Chapter 1 Introduction, p. 1"
+    ]
+  },
+  {
+    "id": "fact-cubesat-1u",
+    "title": "One unit = 10 cm",
+    "text": "A 1U CubeSat is a 10 cm cube with a mass of roughly 1 to 1.33 kg; bigger CubeSats are built from multiple units, such as 3U and 6U.",
+    "topic": "mission-design",
+    "sourceIds": [
+      "cubesat-101"
+    ],
+    "sourceLocations": [
+      "CubeSat 101, Chapter 1 Introduction, p. 4"
+    ]
+  },
+  {
+    "id": "fact-cubesat-timeline",
+    "title": "Months to years",
+    "text": "A CubeSat can be built and delivered in as little as 9 months, but development typically takes 18 to 24 months.",
+    "topic": "mission-design",
+    "sourceIds": [
+      "cubesat-101"
+    ],
+    "sourceLocations": [
+      "CubeSat 101, Chapter 2 Development Process Overview, p. 9"
+    ]
+  },
+  {
+    "id": "fact-cubesat-csli",
+    "title": "Hitching a ride",
+    "text": "NASA's CubeSat Launch Initiative gives selected CubeSats rides to space as auxiliary payloads on launches with spare capacity or by deployment from the International Space Station.",
+    "topic": "mission-design",
+    "sourceIds": [
+      "cubesat-101"
+    ],
+    "sourceLocations": [
+      "CubeSat 101, Chapter 1 Introduction, p. 2"
+    ]
+  },
+  {
+    "id": "fact-cubesat-solar-panels",
+    "title": "Unfolding for sunlight",
+    "text": "Many CubeSats use deployable solar panels to increase their exposure to the Sun; on one example spacecraft, deployable panels were expected to nearly double the power input.",
+    "topic": "power",
+    "sourceIds": [
+      "cubesat-101"
+    ],
+    "sourceLocations": [
+      "CubeSat 101, Chapter 2, p. 16; ChargerSat-1 image caption"
+    ]
+  },
+  {
+    "id": "fact-cubesat-adcs",
+    "title": "Point to power up",
+    "text": "An attitude determination and control system (ADCS) stabilizes a spacecraft and points it in a chosen direction, for example aiming solar panels at the Sun or a camera at Earth.",
+    "topic": "navigation",
+    "sourceIds": [
+      "cubesat-101"
+    ],
+    "sourceLocations": [
+      "CubeSat 101, Chapter 2, p. 17; Appendix glossary"
+    ]
+  },
+  {
+    "id": "fact-cubesat-batteries",
+    "title": "Safe batteries",
+    "text": "CubeSat developers generally prefer certified batteries, and launch providers review a battery report that checks the circuits protecting the batteries.",
+    "topic": "power",
+    "sourceIds": [
+      "cubesat-101"
+    ],
+    "sourceLocations": [
+      "CubeSat 101, Chapter 2, p. 16; Chapter 6 Flight Certification Documentation, battery report section, p. 57"
+    ]
+  },
+  {
+    "id": "fact-cubesat-inhibits",
+    "title": "Power stays off until release",
+    "text": "Separation switches keep a CubeSat's power system disconnected from its circuits while it sits inside the dispenser, so it cannot switch on too early.",
+    "topic": "power",
+    "sourceIds": [
+      "cubesat-101"
+    ],
+    "sourceLocations": [
+      "CubeSat 101, Chapter 6 Flight Certification Documentation, p. 58"
+    ]
+  },
+  {
+    "id": "fact-cubesat-ground-station",
+    "title": "Someone has to listen",
+    "text": "A CubeSat ground station needs at least a radio and an antenna, and CubeSat 101 warns that launching with an inadequate ground station is a mission killer.",
+    "topic": "navigation",
+    "sourceIds": [
+      "cubesat-101"
+    ],
+    "sourceLocations": [
+      "CubeSat 101, Chapter 2, Ground Station Design, Development, and Testing, p. 22"
+    ]
+  },
+  {
+    "id": "fact-cubesat-radio-license",
+    "title": "A license to transmit",
+    "text": "Most CubeSats need a radio license before they can transmit to the ground; in the United States the NTIA licenses government satellites and the FCC licenses non-federal ones.",
+    "topic": "mission-design",
+    "sourceIds": [
+      "cubesat-101"
+    ],
+    "sourceLocations": [
+      "CubeSat 101, Chapter 2 Licensing, p. 20; Chapter 5 Licensing Procedures"
+    ]
+  },
+  {
+    "id": "fact-cubesat-vibration",
+    "title": "Shake before you fly",
+    "text": "Verification testing typically includes vibration tests, which show a CubeSat will survive the shaking of launch, and thermal vacuum tests.",
+    "topic": "shielding",
+    "sourceIds": [
+      "cubesat-101"
+    ],
+    "sourceLocations": [
+      "CubeSat 101, Chapter 2, p. 24; Chapter 6, Dynamic Environment Testing, p. 60"
+    ]
+  },
+  {
+    "id": "fact-cubesat-bakeout",
+    "title": "Bake it on the ground",
+    "text": "A thermal vacuum bakeout heats a CubeSat in a vacuum so materials release contaminant gases on the ground rather than in space, where they could coat sensitive instruments.",
+    "topic": "shielding",
+    "sourceIds": [
+      "cubesat-101"
+    ],
+    "sourceLocations": [
+      "CubeSat 101, Chapter 6, Thermal Vacuum Bakeout, p. 62"
+    ]
+  },
+  {
+    "id": "fact-cubesat-debris",
+    "title": "Leave space clean",
+    "text": "Before launch, an orbital debris assessment shows that a CubeSat will not pose an unacceptable hazard to other spacecraft and will deorbit in a reasonable amount of time.",
+    "topic": "shielding",
+    "sourceIds": [
+      "cubesat-101"
+    ],
+    "sourceLocations": [
+      "CubeSat 101, Chapter 6, Orbital Debris Mitigation Compliance, p. 54"
+    ]
+  },
+  {
+    "id": "fact-lightsail",
+    "title": "Sailing on sunlight",
+    "text": "LightSail, a Planetary Society CubeSat launched through NASA's CubeSat Launch Initiative in 2015, tested deploying a 32-square-meter solar sail from a spacecraft about the size of a loaf of bread.",
+    "topic": "propulsion",
+    "sourceIds": [
+      "cubesat-101"
+    ],
+    "sourceLocations": [
+      "CubeSat 101, LightSail image caption (ELaNa XI mission)"
+    ]
+  }
+]

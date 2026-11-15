@@ -1,0 +1,75 @@
+[
+  {
+    "id": "design-science-missions",
+    "title": "Design and Develop Science Missions (Access to Space for All Systems Engineering Webinar Series)",
+    "sourceType": "web",
+    "officialUrl": "https://ntrs.nasa.gov/citations/20250002492",
+    "localReference": "NASA Technical Reports Server record 20250002492; webinar by NASA Ames Research Center, 26 March 2025 (slides PDF linked from the record).",
+    "version": "2025-03-26",
+    "accessedOn": "2026-11-14"
+  },
+  {
+    "id": "gmat",
+    "title": "General Mission Analysis Tool (GMAT)",
+    "sourceType": "software",
+    "officialUrl": "https://software.nasa.gov/software/GSC-19640-1",
+    "localReference": "NASA Software Catalog entry GSC-19640-1 (GMAT R2026); project documentation on the GMAT Wiki (gmat.atlassian.net, 'GMAT Wiki Home' and 'For Users' pages).",
+    "version": "R2026",
+    "accessedOn": "2026-11-14"
+  },
+  {
+    "id": "concept-maturity-levels",
+    "title": "Space Mission Concept Development Using Concept Maturity Levels (JPL)",
+    "sourceType": "pdf",
+    "officialUrl": "https://ntrs.nasa.gov/citations/20150007816",
+    "localReference": "Wessen, Borden, Ziemer & Kwok (Jet Propulsion Laboratory), AIAA SPACE 2013 Conference, 10-12 Sept 2013. URL is the NASA Technical Reports Server catalog record (abstract); the record lists no direct PDF download.",
+    "version": "2013",
+    "accessedOn": "2026-11-14"
+  },
+  {
+    "id": "mission-design-lab",
+    "title": "Mission Design Lab (MDL), NASA Goddard Integrated Design Center",
+    "sourceType": "web",
+    "officialUrl": "https://etd.gsfc.nasa.gov/capabilities/integrated-design-center/mission-design-lab",
+    "localReference": "Goddard Engineering and Technology Directorate web page 'Mission Design Lab'.",
+    "accessedOn": "2026-11-14"
+  },
+  {
+    "id": "nasa-mission-viz",
+    "title": "NASA Mission Viz (mission visualization resource)",
+    "sourceType": "web",
+    "localReference": "Provided by the project brief. An official URL for a resource with this exact name could not be confirmed, so none is listed.",
+    "accessedOn": "2026-11-14"
+  },
+  {
+    "id": "telescope-learning-game",
+    "title": "Build It Yourself / Scope It Out: A Learning Game About Telescopes",
+    "sourceType": "web",
+    "officialUrl": "https://science.nasa.gov/mission/webb/game-build-it-yourself/",
+    "localReference": "NASA Science, James Webb Space Telescope game pages 'Build It Yourself' and 'Scope It Out' (science.nasa.gov/mission/webb/game-scope-it-out/).",
+    "accessedOn": "2026-11-14"
+  },
+  {
+    "id": "cubesat-101",
+    "title": "CubeSat 101: Basic Concepts and Processes for First-Time CubeSat Developers",
+    "sourceType": "pdf",
+    "officialUrl": "https://www.nasa.gov/wp-content/uploads/2017/03/nasa_csli_cubesat_101_508.pdf",
+    "localReference": "NASA CubeSat Launch Initiative, prepared with Cal Poly CubeSat Systems Engineer Lab. Page numbers refer to the printed page numbers of the document.",
+    "version": "Revision October 2017",
+    "accessedOn": "2026-11-14"
+  },
+  {
+    "id": "vr-space-mission",
+    "title": "Visualize a Space Mission Using Virtual Reality (NASA Space Apps Challenge)",
+    "sourceType": "text",
+    "localReference": "Challenge text provided by the project brief. A Space Apps page with this exact title could not be confirmed (related VR challenges exist, e.g. 2019 'Up, Out, and Away!'), so no URL is listed.",
+    "accessedOn": "2026-11-14"
+  },
+  {
+    "id": "nasa-digital-games",
+    "title": "NASA Digital Games and Activities (educational collection)",
+    "sourceType": "web",
+    "localReference": "Provided by the project brief. NASA hosts several game collections (e.g. NASA Science 'Digital Learning', NASA Space Place games); a page with this exact title could not be confirmed, so no URL is listed.",
+    "accessedOn": "2026-11-14"
+  }
+]
