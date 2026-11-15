@@ -11,6 +11,7 @@ import { Results } from "./screens/Results";
 import { PersonalBestsModal } from "./screens/PersonalBests";
 import { AboutModal } from "./screens/About";
 import { TutorialOverlay } from "./screens/Tutorial";
+import { FirstVisitWelcome } from "./screens/Welcome";
 import { MuteToggle } from "./hud/ui";
 
 type SceneVariant = "menu" | "flight" | "arrival";
@@ -95,6 +96,7 @@ export function App() {
       {tutorial && <TutorialOverlay />}
       {modal === "bests" && <PersonalBestsModal onClose={() => setModal(null)} />}
       {modal === "about" && <AboutModal onClose={() => setModal(null)} />}
+      {screen === "menu" && !tutorial && <FirstVisitWelcome />}
       <div className="global-controls">
         <MuteToggle />
       </div>
