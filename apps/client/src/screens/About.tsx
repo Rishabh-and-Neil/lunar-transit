@@ -49,6 +49,8 @@ export function AboutModal({ onClose }: { onClose: () => void }) {
           <kbd>Esc</kbd> Close dialogs
         </span>
       </div>
+      <h3>Credits</h3>
+      <p className="muted">In-flight music: “Black Orbit” by MokkaMusic.</p>
     </Modal>
   );
 }

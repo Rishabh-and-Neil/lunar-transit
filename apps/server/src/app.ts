@@ -27,6 +27,7 @@ const MIME: Record<string, string> = {
   ".ico": "image/x-icon",
   ".woff2": "font/woff2",
   ".txt": "text/plain; charset=utf-8",
+  ".mp3": "audio/mpeg",
 };
 
 /** STATIC_DIR env, else apps/client/dist relative to the repo root or the server workspace. */
@@ -42,7 +43,7 @@ function findStaticDir(): string | null {
   return null;
 }
 
-function serveStatic(root: string, urlPath: string, res: ServerResponse): void {
+function serveStatic(root: string, urlPath: string, req: IncomingMessage, res: ServerResponse): void {
   let decoded: string;
   try {
     decoded = decodeURIComponent(urlPath);
@@ -55,10 +56,33 @@ function serveStatic(root: string, urlPath: string, res: ServerResponse): void {
   if (insideRoot && existsSync(filePath) && statSync(filePath).isFile()) target = filePath;
   const ext = extname(target).toLowerCase();
   const isAsset = target.includes(`${sep}assets${sep}`);
-  res.writeHead(200, {
+  const isMedia = ext === ".mp3";
+  const headers: Record<string, string | number> = {
     "content-type": MIME[ext] ?? "application/octet-stream",
-    "cache-control": isAsset ? "public, max-age=31536000, immutable" : "no-cache",
-  });
+    "cache-control": isAsset ? "public, max-age=31536000, immutable" : isMedia ? "public, max-age=86400" : "no-cache",
+    "accept-ranges": "bytes",
+  };
+  const size = statSync(target).size;
+
+  // Byte-range support: Safari refuses to play audio without it, and it lets browsers stream/loop media.
+  const range = /^bytes=(\d*)-(\d*)$/.exec(String(req.headers.range ?? ""));
+  if (range && (range[1] !== "" || range[2] !== "")) {
+    let start = range[1] === "" ? size - Number(range[2]) : Number(range[1]);
+    let end = range[1] === "" || range[2] === "" ? size - 1 : Number(range[2]);
+    start = Math.max(0, start);
+    end = Math.min(end, size - 1);
+    if (start > end || start >= size) {
+      res.writeHead(416, { "content-range": `bytes */${size}` });
+      res.end();
+      return;
+    }
+    res.writeHead(206, { ...headers, "content-range": `bytes ${start}-${end}/${size}`, "content-length": end - start + 1 });
+    if (req.method === "HEAD") return void res.end();
+    createReadStream(target, { start, end }).pipe(res);
+    return;
+  }
+  res.writeHead(200, { ...headers, "content-length": size });
+  if (req.method === "HEAD") return void res.end();
   createReadStream(target).pipe(res);
 }
 
@@ -99,7 +123,7 @@ export async function startServer(port: number, opts: StartOptions = {}): Promis
       return;
     }
     if ((req.method === "GET" || req.method === "HEAD") && staticDir) {
-      serveStatic(staticDir, path, res);
+      serveStatic(staticDir, path, req, res);
       return;
     }
     if (req.method === "GET" && path === "/") {

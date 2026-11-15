@@ -1,6 +1,7 @@
 // Small shared presentational components.
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { playSfx } from "../audio/sfx";
+import { isMusicMuted, onMusicMuteChange, setMusicMuted } from "../audio/music";
 import { useMuted } from "./hooks";
 
 export function Meter(props: {
@@ -62,6 +63,25 @@ export function MuteToggle() {
       }}
     >
       {muted ? "🔇" : "🔊"}
+    </button>
+  );
+}
+
+export function MusicToggle() {
+  const [musicMuted, setMusicMutedState] = useState(isMusicMuted());
+  useEffect(() => onMusicMuteChange(setMusicMutedState), []);
+  return (
+    <button
+      className={`icon-btn mute-toggle music-toggle ${musicMuted ? "off" : ""}`}
+      aria-label={musicMuted ? "Turn music on" : "Turn music off"}
+      aria-pressed={!musicMuted}
+      title={musicMuted ? "Music off" : "Music on"}
+      onClick={() => {
+        setMusicMuted(!musicMuted);
+        playSfx("click");
+      }}
+    >
+      🎵
     </button>
   );
 }

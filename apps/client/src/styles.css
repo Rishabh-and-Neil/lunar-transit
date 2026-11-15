@@ -2909,3 +2909,26 @@ p {
 .welcome-actions .btn {
   flex: 1 1 180px;
 }
+
+/* ------------------------------------------------------- music toggle */
+.global-controls {
+  display: flex;
+  gap: 8px;
+}
+.music-toggle {
+  position: relative;
+}
+.music-toggle.off {
+  opacity: 0.6;
+}
+.music-toggle.off::after {
+  content: "";
+  position: absolute;
+  left: 7px;
+  right: 7px;
+  top: 50%;
+  height: 2px;
+  background: currentColor;
+  transform: rotate(-45deg);
+  border-radius: 2px;
+}

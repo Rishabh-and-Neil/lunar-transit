@@ -12,7 +12,9 @@ import { PersonalBestsModal } from "./screens/PersonalBests";
 import { AboutModal } from "./screens/About";
 import { TutorialOverlay } from "./screens/Tutorial";
 import { FirstVisitWelcome } from "./screens/Welcome";
-import { MuteToggle } from "./hud/ui";
+import { MusicToggle, MuteToggle } from "./hud/ui";
+import { useEffect } from "react";
+import { setMusicActive } from "./audio/music";
 
 type SceneVariant = "menu" | "flight" | "arrival";
 
@@ -75,7 +77,23 @@ function CurrentScreen() {
   }
 }
 
+const TRANSIT_PHASES = new Set(["main-flight", "overtime", "simulation"]);
+
+/** Plays the soundtrack on loop while the viewer's ship is in transit to the Moon. */
+function useTransitMusic(): void {
+  const inTransit = useGameStore((s) => {
+    if (s.screen !== "game" || s.snapshot?.status !== "active") return false;
+    const ship = viewerShip(s.snapshot);
+    return ship ? TRANSIT_PHASES.has(ship.phase) : false;
+  });
+  useEffect(() => {
+    setMusicActive(inTransit);
+  }, [inTransit]);
+  useEffect(() => () => setMusicActive(false), []);
+}
+
 export function App() {
+  useTransitMusic();
   const variant = useSceneVariant();
   const screen = useGameStore((s) => s.screen);
   const modal = useGameStore((s) => s.modal);
@@ -98,6 +116,7 @@ export function App() {
       {modal === "about" && <AboutModal onClose={() => setModal(null)} />}
       {screen === "menu" && !tutorial && <FirstVisitWelcome />}
       <div className="global-controls">
+        <MusicToggle />
         <MuteToggle />
       </div>
       <Toasts />
