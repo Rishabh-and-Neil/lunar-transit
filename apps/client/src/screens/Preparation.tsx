@@ -91,6 +91,7 @@ function EquipmentCard(props: {
   return (
     <div
       className={`eq-card ${owned ? "owned" : ""} ${!owned && !hint.canBuy ? "locked" : ""}`}
+      data-tour={`eq-${id}`}
       onMouseEnter={inspect}
       onFocus={inspect}
       onPointerDown={inspect}
@@ -296,6 +297,7 @@ function ReadyPanel() {
       )}
       <button
         className={`btn btn-xl ${me?.ready ? "btn-ghost" : "btn-go"}`}
+        data-tour="launch"
         disabled={readyPending || !me}
         onClick={() => {
           playSfx(me?.ready ? "click" : "purchase");
@@ -354,6 +356,7 @@ export function Preparation() {
                 role="tab"
                 aria-selected={tab === t}
                 className={`tab ${tab === t ? "tab-on" : ""}`}
+                data-tour={`tab-${t}`}
                 onClick={() => {
                   playSfx("click");
                   setTab(t);

@@ -151,6 +151,12 @@ export function setTutorialTimeScale(scale: number): void {
   if (t instanceof LocalTransport && get().tutorial) t.setTimeScale(scale);
 }
 
+/** Tutorial only: pause/resume the local simulation while a tutorial card is being read. */
+export function setTutorialPaused(paused: boolean): void {
+  const t = getActiveTransport();
+  if (t instanceof LocalTransport && get().tutorial) t.setPaused(paused);
+}
+
 // ---------------------------------------------------------------------------
 // Online
 

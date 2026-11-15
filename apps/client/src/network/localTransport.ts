@@ -37,6 +37,7 @@ export class LocalTransport implements GameTransport {
   private lastEmitTick = 0;
   private lastEmitAt = 0;
   private timeScale = 1;
+  private paused = false;
   private disposed = false;
 
   constructor(
@@ -70,6 +71,13 @@ export class LocalTransport implements GameTransport {
   setTimeScale(scale: number): void {
     if (!this.opts.tutorial) return;
     this.timeScale = Math.max(1, Math.min(16, scale));
+  }
+
+  /** Tutorial only: freeze the simulation while the player reads (commands still apply instantly). */
+  setPaused(paused: boolean): void {
+    if (!this.opts.tutorial) return;
+    this.paused = paused;
+    this.lastAt = performance.now();
   }
 
   get difficulty(): Difficulty {
@@ -121,6 +129,10 @@ export class LocalTransport implements GameTransport {
 
   private pump(): void {
     const now = performance.now();
+    if (this.paused) {
+      this.lastAt = now;
+      return;
+    }
     this.acc += Math.min(MAX_CATCHUP_MS, now - this.lastAt) * this.timeScale;
     this.lastAt = now;
     let emitted = false;

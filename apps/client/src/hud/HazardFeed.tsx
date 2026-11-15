@@ -126,7 +126,7 @@ export function EventFeed() {
     .slice(0, 6);
   if (lines.length === 0) return null;
   return (
-    <div className="event-feed" aria-live="polite">
+    <div className="event-feed" aria-live="polite" data-tour="log">
       {lines.map(({ e, d }, i) => (
         <div key={e.seq} className={`feed-line tone-${d.tone}`} style={{ opacity: 1 - i * 0.13 }}>
           <span className="feed-time">{formatClock(e.atMs)}</span>
