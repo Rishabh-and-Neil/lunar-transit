@@ -138,8 +138,12 @@ export function dismissToast(id: number): void {
   set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }));
 }
 
+/** A pending flag never outlives this, so a lost response can't leave a button locked. */
+const PENDING_TIMEOUT_MS = 5000;
+
 export function addPending(p: PendingCommand): void {
   set((s) => ({ pending: { ...s.pending, [p.commandId]: p } }));
+  setTimeout(() => removePending(p.commandId), PENDING_TIMEOUT_MS);
 }
 
 export function removePending(commandId: string): void {
@@ -151,14 +155,15 @@ export function removePending(commandId: string): void {
   });
 }
 
-/** Ingests a snapshot: stores it, clears pending commands sent before it. */
+/**
+ * Ingests a snapshot and clears all pending commands. Commands are applied before the next snapshot
+ * (the local engine replies synchronously; the server snapshots right after an accepted command and
+ * sends command:rejected otherwise), so any newer snapshot already reflects them. Keeping "recent"
+ * commands pending here locked shop buttons in preparation, where no further snapshot arrives.
+ */
 export function ingestSnapshot(snapshot: PublicMatchSnapshot): void {
   const now = performance.now();
-  set((s) => {
-    const pending: Record<string, PendingCommand> = {};
-    for (const [id, p] of Object.entries(s.pending)) if (now - p.sentAt < 25) pending[id] = p;
-    return { snapshot, snapshotAt: now, pending };
-  });
+  set({ snapshot, snapshotAt: now, pending: {} });
 }
 
 export function resetMatchState(): void {
