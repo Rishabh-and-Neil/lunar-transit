@@ -196,7 +196,11 @@ function buildSteps(): Step[] {
       },
       todo: "Press F (or click 🤖) to repair.",
       focus: [tour("repair")],
-      until: (s) => (viewerShip(s)?.repairsUsed ?? 0) > 0,
+      // advance once the drone has finished healing, so the player sees it work
+      until: (s) => {
+        const sh = viewerShip(s);
+        return (sh?.repairsUsed ?? 0) > 0 && !sh?.repair;
+      },
       next: "Skip",
     },
     {

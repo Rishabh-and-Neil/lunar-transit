@@ -3119,3 +3119,31 @@ p {
 .tutorial-card.pos-right {
   top: calc(94px + var(--safe-top, 0px));
 }
+
+/* Repair button: green fill rises while the drone repairs (cooldown uses the shared sweep) */
+.ability-heal {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 0 0 11px 11px;
+  background: linear-gradient(0deg, rgba(61, 220, 151, 0.55), rgba(61, 220, 151, 0.18));
+  pointer-events: none;
+  transition: height 0.2s linear;
+}
+.ability.repair .ability-key,
+.ability.repair .ability-cost {
+  z-index: 1;
+}
+.ability.repair .ability-icon {
+  position: relative;
+  z-index: 1;
+}
+/* While the drone is actively healing, show the button in full colour (it's busy, not unavailable) */
+.ability.repair.repairing {
+  filter: none;
+  border-color: rgba(61, 220, 151, 0.8);
+}
+.ability.repair .ability-cd {
+  z-index: 2;
+}

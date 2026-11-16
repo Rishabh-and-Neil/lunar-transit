@@ -5,7 +5,6 @@ import { useGameStore } from "../state/gameStore";
 import { abilityHint, opponentShip, purchaseHint, repairHint, viewerShip, type AbilityHint, type RepairHint } from "../state/selectors";
 import { commands } from "../network/commands";
 import { playSfx } from "../audio/sfx";
-import { Ring } from "./ui";
 
 const EMPTY_HINT: AbilityHint = { enabled: false, cost: 0, cooldownMs: 0, cooldownTotalMs: 1 };
 
@@ -92,7 +91,6 @@ function RepairControl({ flash }: { flash: number }) {
   const upgraded = useGameStore((s) => viewerShip(s.snapshot)?.repairUpgraded ?? false);
   const upHint = useGameStore(useShallow((s) => (s.snapshot ? purchaseHint(s.snapshot, "repair-upgrade") : { owned: false, canBuy: false })));
   if (!hint.available) return null;
-  const ring = hint.repairing ? hint.progress : hint.cooldownMs > 0 ? 1 - hint.cooldownMs / Math.max(1, hint.cooldownTotalMs) : 1;
   return (
     <div className="repair-control" data-tour="repair">
       <button
@@ -102,12 +100,14 @@ function RepairControl({ flash }: { flash: number }) {
         onClick={() => activateRepair()}
         key={flash}
       >
-        <Ring progress={ring} size={60} stroke={3} className={hint.repairing ? "ring-good" : "ring-accent"} />
         <span className="ability-icon">🤖</span>
         <span className="ability-key">F</span>
         <span className="ability-cost">◈{hint.cost}</span>
+        {hint.repairing && <span className="ability-heal" style={{ height: `${Math.round(hint.progress * 100)}%` }} />}
         {hint.cooldownMs > 0 && !hint.repairing && (
-          <span className="ability-cd-num solo">{Math.ceil(hint.cooldownMs / 1000)}</span>
+          <span className="ability-cd" style={{ ["--cd" as string]: `${Math.min(1, hint.cooldownMs / Math.max(1, hint.cooldownTotalMs)) * 360}deg` }}>
+            <span className="ability-cd-num">{Math.ceil(hint.cooldownMs / 1000)}</span>
+          </span>
         )}
         <span className="tooltip" role="tooltip">
           <strong>
