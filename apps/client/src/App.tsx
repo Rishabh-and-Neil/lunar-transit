@@ -16,6 +16,7 @@ import { FirstVisitWelcome } from "./screens/Welcome";
 import { MusicToggle, MuteToggle } from "./hud/ui";
 import { useEffect } from "react";
 import { setMusicActive } from "./audio/music";
+import { uploadEarlierBests } from "./state/importBests";
 
 type SceneVariant = "menu" | "flight" | "arrival";
 
@@ -93,8 +94,17 @@ function useTransitMusic(): void {
   useEffect(() => () => setMusicActive(false), []);
 }
 
+/** Once per visit: put personal bests saved before leaderboards existed onto the boards. */
+function useUploadEarlierBests() {
+  useEffect(() => {
+    const t = window.setTimeout(() => void uploadEarlierBests(), 1500);
+    return () => window.clearTimeout(t);
+  }, []);
+}
+
 export function App() {
   useTransitMusic();
+  useUploadEarlierBests();
   const variant = useSceneVariant();
   const screen = useGameStore((s) => s.screen);
   const modal = useGameStore((s) => s.modal);

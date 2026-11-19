@@ -5,9 +5,9 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import pg from "pg";
 import {
-  ATTACHMENTS, LEADERBOARD_KEEP, LEADERBOARD_SHOW, replaySoloRun, zSoloRunRecord,
+  ATTACHMENTS, LEADERBOARD_KEEP, LEADERBOARD_SHOW, replaySoloRun, zSavedBest, zSoloRunRecord,
   type Difficulty, type LeaderboardBoard, type LeaderboardEntry, type LeaderboardMode, type MatchState,
-  type SpacecraftState, type SubmitResult,
+  type AttachmentId, type SpacecraftState, type SubmitResult,
 } from "@sm/shared";
 
 interface StoredEntry extends LeaderboardEntry {
@@ -22,6 +22,8 @@ interface LeaderboardStore {
   list(mode: LeaderboardMode, difficulty: Difficulty, limit: number): Promise<{ entries: StoredEntry[]; total: number }>;
   has(fingerprint: string): Promise<boolean>;
   add(e: StoredEntry): Promise<void>;
+  /** True if this name already has an entry at least as fast on the board. */
+  nameHasAtLeast(mode: LeaderboardMode, difficulty: Difficulty, name: string, timeMs: number): Promise<boolean>;
   /** Number of entries strictly faster than timeMs. */
   fasterThan(mode: LeaderboardMode, difficulty: Difficulty, timeMs: number): Promise<number>;
 }
@@ -47,6 +49,10 @@ class FileStore implements LeaderboardStore {
   }
   async has(fingerprint: string) {
     return this.entries.some((e) => e.fingerprint === fingerprint);
+  }
+  async nameHasAtLeast(mode: LeaderboardMode, difficulty: Difficulty, name: string, timeMs: number) {
+    const n = name.trim().toLowerCase();
+    return this.board(mode, difficulty).some((e) => e.timeMs <= timeMs && e.names.some((x) => x.trim().toLowerCase() === n));
   }
   async fasterThan(mode: LeaderboardMode, difficulty: Difficulty, timeMs: number) {
     return this.board(mode, difficulty).filter((e) => e.timeMs < timeMs).length;
@@ -85,12 +91,14 @@ class PgStore implements LeaderboardStore {
     await this.pool.query(`CREATE TABLE IF NOT EXISTS leaderboard (
       id text PRIMARY KEY, mode text NOT NULL, difficulty text NOT NULL, names jsonb NOT NULL,
       time_ms integer NOT NULL, at bigint NOT NULL, loadout jsonb NOT NULL, fingerprint text UNIQUE NOT NULL)`);
+    await this.pool.query(`ALTER TABLE leaderboard ADD COLUMN IF NOT EXISTS imported boolean NOT NULL DEFAULT false`);
     await this.pool.query(`CREATE INDEX IF NOT EXISTS leaderboard_board ON leaderboard (mode, difficulty, time_ms)`);
   }
   private row(r: Record<string, unknown>): StoredEntry {
     return {
       id: String(r.id), mode: r.mode as LeaderboardMode, difficulty: r.difficulty as Difficulty, names: r.names as string[],
       timeMs: Number(r.time_ms), at: Number(r.at), loadout: r.loadout as string[], fingerprint: String(r.fingerprint),
+      ...(r.imported ? { imported: true } : {}),
     };
   }
   async list(mode: LeaderboardMode, difficulty: Difficulty, limit: number) {
@@ -102,14 +110,21 @@ class PgStore implements LeaderboardStore {
     const r = await this.pool.query(`SELECT 1 FROM leaderboard WHERE fingerprint=$1`, [fingerprint]);
     return (r.rowCount ?? 0) > 0;
   }
+  async nameHasAtLeast(mode: LeaderboardMode, difficulty: Difficulty, name: string, timeMs: number) {
+    const r = await this.pool.query(
+      `SELECT 1 FROM leaderboard WHERE mode=$1 AND difficulty=$2 AND time_ms <= $3 AND EXISTS (SELECT 1 FROM jsonb_array_elements_text(names) x WHERE lower(trim(x)) = $4) LIMIT 1`,
+      [mode, difficulty, timeMs, name.trim().toLowerCase()],
+    );
+    return (r.rowCount ?? 0) > 0;
+  }
   async fasterThan(mode: LeaderboardMode, difficulty: Difficulty, timeMs: number) {
     const r = await this.pool.query(`SELECT count(*)::int AS n FROM leaderboard WHERE mode=$1 AND difficulty=$2 AND time_ms < $3`, [mode, difficulty, timeMs]);
     return Number(r.rows[0]?.n ?? 0);
   }
   async add(e: StoredEntry) {
     await this.pool.query(
-      `INSERT INTO leaderboard (id, mode, difficulty, names, time_ms, at, loadout, fingerprint) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT (fingerprint) DO NOTHING`,
-      [e.id, e.mode, e.difficulty, JSON.stringify(e.names), e.timeMs, e.at, JSON.stringify(e.loadout), e.fingerprint],
+      `INSERT INTO leaderboard (id, mode, difficulty, names, time_ms, at, loadout, fingerprint, imported) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT (fingerprint) DO NOTHING`,
+      [e.id, e.mode, e.difficulty, JSON.stringify(e.names), e.timeMs, e.at, JSON.stringify(e.loadout), e.fingerprint, e.imported === true],
     );
   }
 }
@@ -187,6 +202,26 @@ export class LeaderboardService {
       at: Date.now(), loadout: loadoutNames(r.state.spacecraft[0]), fingerprint,
     });
     this.log(`[leaderboard] solo ${rec.difficulty} ${(r.totalMs / 1000).toFixed(2)}s by ${rec.name} verified in ${Date.now() - t0}ms → rank ${res.rank ?? "-"}`);
+    return res;
+  }
+
+  /**
+   * Adds a personal best that a browser saved before leaderboards launched. These have no replay to
+   * check, so they are bounds-checked, limited to one per saved record, and shown as "earlier runs".
+   */
+  async importSavedBest(body: unknown, client: string): Promise<SubmitResult> {
+    if (this.rateLimited(`import:${client}`)) return { ok: false, reason: "Too many submissions — try again in a minute." };
+    const parsed = zSavedBest.safeParse(body);
+    if (!parsed.success) return { ok: false, reason: "Invalid saved best." };
+    const b = parsed.data;
+    if (await this.store.nameHasAtLeast(b.mode, b.difficulty, b.name, b.totalMs)) return { ok: false, reason: "This run is already on the leaderboard." };
+    const fingerprint = createHash("sha256").update(JSON.stringify(["saved", b.mode, b.difficulty, b.name.trim().toLowerCase(), b.totalMs, b.setAt])).digest("hex");
+    const loadout = b.attachments.filter((id): id is AttachmentId => id in ATTACHMENTS).map((id) => ATTACHMENTS[id].name);
+    const res = await this.insert({
+      id: randomUUID(), mode: b.mode, difficulty: b.difficulty, names: [b.name], timeMs: b.totalMs,
+      at: b.setAt, loadout, fingerprint, imported: true,
+    });
+    this.log(`[leaderboard] imported earlier ${b.mode} ${b.difficulty} best ${(b.totalMs / 1000).toFixed(2)}s by ${b.name} → rank ${res.rank ?? "-"}`);
     return res;
   }
 

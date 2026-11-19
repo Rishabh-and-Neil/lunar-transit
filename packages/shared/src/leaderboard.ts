@@ -1,4 +1,6 @@
 // Shared leaderboard types for the HTTP API (server) and the leaderboard screen (client).
+import { z } from "zod";
+import { zDifficulty, zName } from "./protocol";
 import type { Difficulty } from "./types";
 
 export type LeaderboardMode = "solo" | "coop";
@@ -20,6 +22,8 @@ export interface LeaderboardEntry {
   at: number;
   /** Equipment names, for curiosity. */
   loadout: string[];
+  /** A personal best saved in a player's browser before leaderboards existed (not replay-verified). */
+  imported?: boolean;
 }
 
 export interface LeaderboardBoard {
@@ -36,3 +40,23 @@ export interface SubmitResult {
   /** 1-based rank on its board, or null if it did not make the kept list. */
   rank?: number | null;
 }
+
+/**
+ * Leaderboards went live on 19 Nov 2026. Personal bests saved in a browser before then had no
+ * leaderboard to go to, so the browser uploads them once. Later runs are submitted (and verified) as they finish.
+ */
+export const LEADERBOARD_LAUNCH_AT = Date.UTC(2026, 10, 19, 20, 0, 0);
+/** Sanity bounds for imported times: nothing can reach the Moon and finish its task faster than this. */
+export const SAVED_BEST_LIMITS = { minMs: 90_000, maxMs: 30 * 60_000 } as const;
+
+export const zSavedBest = z.object({
+  mode: z.enum(["solo", "coop"]),
+  difficulty: zDifficulty,
+  name: zName,
+  totalMs: z.number().int().min(SAVED_BEST_LIMITS.minMs).max(SAVED_BEST_LIMITS.maxMs),
+  /** When the best was set (epoch ms); must be before leaderboards launched. */
+  setAt: z.number().int().min(Date.UTC(2026, 0, 1)).max(LEADERBOARD_LAUNCH_AT),
+  /** Attachment ids; the server turns known ones into names. */
+  attachments: z.array(z.string().max(40)).max(14),
+});
+export type SavedBest = z.infer<typeof zSavedBest>;

@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
-  TIMING, advance, allPlayersReady, applyCommand, createMatch, startCountdown, submissionFromSolution,
+  LEADERBOARD_LAUNCH_AT, TIMING, advance, allPlayersReady, applyCommand, createMatch, startCountdown, submissionFromSolution,
   type LeaderboardBoard, type MatchState, type PlayerCommand, type RecordedCommand, type SoloRunRecord, type SubmitResult,
 } from "@sm/shared";
 import { startServer, type RunningServer } from "../src/app";
@@ -88,6 +88,37 @@ describe("leaderboard API", () => {
 
   it("rejects malformed bodies", async () => {
     expect((await post({ hello: "world" })).status).toBe(422);
+  });
+
+  it("imports a personal best saved before leaderboards launched, once, marked as an earlier run", async () => {
+    const best = { mode: "solo", difficulty: "hard", name: "Old Timer", totalMs: 140_000, setAt: LEADERBOARD_LAUNCH_AT - 86_400_000, attachments: ["ion-thruster", "made-up"] };
+    const imp = (b: unknown) => fetch(`${url}/api/leaderboard/import`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) });
+    const res = await imp(best);
+    const body = (await res.json()) as SubmitResult;
+    expect(res.status).toBe(200);
+    expect(body.rank).toBe(1);
+    expect(body.entry?.imported).toBe(true);
+    expect(body.entry?.loadout).toEqual(["Ion Thruster"]);
+    expect(body.entry?.at).toBe(best.setAt);
+    // uploading it again (or a slower one under the same name) is refused
+    expect((await imp(best)).status).toBe(422);
+    expect((await imp({ ...best, totalMs: 150_000 })).status).toBe(422);
+    // set after launch, impossibly fast, or malformed: refused
+    expect((await imp({ ...best, name: "Late", setAt: LEADERBOARD_LAUNCH_AT + 1 })).status).toBe(422);
+    expect((await imp({ ...best, name: "Speedy", totalMs: 5_000 })).status).toBe(422);
+    expect((await imp({ nope: 1 })).status).toBe(422);
+    const board = (await (await fetch(`${url}/api/leaderboard?mode=solo&difficulty=hard`)).json()) as LeaderboardBoard;
+    expect(board.entries.map((e) => [e.names[0], e.imported])).toEqual([["Old Timer", true]]);
+  });
+
+  it("does not import a best already on the board under the same name", async () => {
+    const board = (await (await fetch(`${url}/api/leaderboard?mode=solo&difficulty=normal`)).json()) as LeaderboardBoard;
+    const verified = board.entries.find((e) => e.names[0] === "Ace")!;
+    const res = await fetch(`${url}/api/leaderboard/import`, {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ mode: "solo", difficulty: "normal", name: "ace", totalMs: verified.timeMs + 1000, setAt: LEADERBOARD_LAUNCH_AT - 1000, attachments: [] }),
+    });
+    expect(res.status).toBe(422);
   });
 
   it("records finished co-op missions from server state", async () => {

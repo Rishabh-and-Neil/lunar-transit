@@ -251,6 +251,14 @@ async function handleApi(
       const result = await lb.submitSolo(body, client);
       return send(result.ok ? 200 : 422, result);
     }
+    if (req.method === "POST" && path === "/api/leaderboard/import") {
+      const body = await readJson(req).catch(() => null);
+      if (body === null) return send(400, { ok: false, reason: "Invalid request." });
+      const fwd = String(req.headers["x-forwarded-for"] ?? "").split(",")[0].trim();
+      const client = fwd || req.socket.remoteAddress || "unknown";
+      const result = await lb.importSavedBest(body, client);
+      return send(result.ok ? 200 : 422, result);
+    }
     return send(404, { ok: false });
   } catch (err) {
     return send(500, { ok: false, reason: err instanceof Error ? err.message : "server error" });

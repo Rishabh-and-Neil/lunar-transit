@@ -6,6 +6,7 @@ import { setLeaderboardView, useGameStore } from "../state/gameStore";
 import { formatClock } from "../state/selectors";
 import { getPersonalBest } from "../state/personalBests";
 import { fetchBoard } from "../network/leaderboard";
+import { uploadEarlierBests } from "../state/importBests";
 import { playSfx } from "../audio/sfx";
 
 const MODES: { id: LeaderboardMode; label: string; icon: string }[] = [
@@ -34,6 +35,7 @@ export function LeaderboardModal({ onClose }: { onClose: () => void }) {
   const load = useCallback(async () => {
     setState("loading");
     try {
+      await uploadEarlierBests(); // no-op once this browser's earlier bests are on the board
       const b = await fetchBoard(view.mode, view.difficulty);
       setBoard(b);
       setState("ready");
@@ -107,6 +109,11 @@ export function LeaderboardModal({ onClose }: { onClose: () => void }) {
                     <span className="lb-name">
                       {e.names.join(" & ")}
                       {mine && <span className="tag">YOU</span>}
+                      {e.imported && (
+                        <span className="tag tag-earlier" title="Personal best set before leaderboards launched. It was saved on the player's device, so it wasn't replay-verified.">
+                          EARLIER RUN
+                        </span>
+                      )}
                     </span>
                     <span className="lb-loadout">{e.loadout.join(" · ") || "No attachments"}</span>
                   </span>
@@ -124,8 +131,8 @@ export function LeaderboardModal({ onClose }: { onClose: () => void }) {
           </span>
           <span className="muted small">
             {view.mode === "solo"
-              ? "Solo times are verified by replaying your run on the server."
-              : "Co-op times are recorded by the server when both crewmates finish."}
+              ? "Solo times are verified by replaying your run on the server. “Earlier run” times are personal bests from before leaderboards launched."
+              : "Co-op times are recorded by the server when both crewmates finish. “Earlier run” times are personal bests from before leaderboards launched."}
           </span>
         </div>
       </div>

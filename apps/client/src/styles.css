@@ -3308,3 +3308,8 @@ p {
   margin-left: 0;
   flex-shrink: 0;
 }
+.lb-name .tag-earlier {
+  background: rgba(255, 255, 255, 0.08);
+  color: #b4c3d6;
+  cursor: help;
+}
