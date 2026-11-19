@@ -6,12 +6,13 @@ import {
   DIFFICULTY,
   LUNAR_TASKS,
   NASA_FACTS,
+  type Difficulty,
   type LunarTaskId,
   type NasaFact,
   type PublicMatchSnapshot,
   type PublicShip,
 } from "@sm/shared";
-import { useGameStore } from "../state/gameStore";
+import { openLeaderboard, useGameStore } from "../state/gameStore";
 import { formatClock, totalCreditsSpent, viewerShip } from "../state/selectors";
 import { playAgain, returnToMenu } from "../network/session";
 import { playSfx } from "../audio/sfx";
@@ -137,6 +138,27 @@ function ShipBreakdown({ ship, snap }: { ship: PublicShip; snap: PublicMatchSnap
   );
 }
 
+function LeaderboardRank({ mode, difficulty }: { mode: string; difficulty: Difficulty }) {
+  const lb = useGameStore((s) => s.lbSubmit);
+  if (mode === "1v1" || lb.status === "idle") return null;
+  const board = mode === "coop" ? "coop" : "solo";
+  const view = () => openLeaderboard({ mode: board, difficulty });
+  if (lb.status === "pending") return <div className="lb-result"><span className="spinner small" /> Verifying your run for the global leaderboard…</div>;
+  if (lb.status === "error")
+    return (
+      <div className="lb-result err">
+        Not on the leaderboard: {lb.reason}
+        <button className="btn btn-small btn-ghost" onClick={view}>View leaderboard</button>
+      </div>
+    );
+  return (
+    <div className="lb-result">
+      🏆 {lb.rank ? <>Global rank <b>#{lb.rank}</b> on {DIFFICULTY[difficulty].label}</> : <>Logged on the {DIFFICULTY[difficulty].label} leaderboard</>}
+      <button className="btn btn-small btn-ghost" onClick={view}>View leaderboard</button>
+    </div>
+  );
+}
+
 export function Results() {
   const snap = useGameStore((s) => s.snapshot);
   const result = useGameStore((s) => s.result);
@@ -183,6 +205,7 @@ export function Results() {
           </div>
         )}
         {pb?.eligible && !pb.isNewBest && pb.previous && <div className="pb-note">Personal best: {formatClock(pb.previous.totalMs, true)}</div>}
+        <LeaderboardRank mode={snap.mode} difficulty={snap.difficulty} />
       </div>
 
       {ship && (

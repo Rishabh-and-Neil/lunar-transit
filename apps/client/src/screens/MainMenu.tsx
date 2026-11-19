@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { setModal, setPlayerName, useGameStore } from "../state/gameStore";
+import { openLeaderboard, setModal, setPlayerName, useGameStore } from "../state/gameStore";
 import { openOnline, startSolo, startTutorial } from "../network/session";
 import { SERVER_URL } from "../network/socket";
 import { playSfx } from "../audio/sfx";
@@ -104,8 +104,8 @@ export function MainMenu() {
           </div>
 
           <div className="menu-footer">
-            <button className="btn btn-small btn-ghost" onClick={click(() => setModal("bests"))}>
-              🏆 Personal Bests
+            <button className="btn btn-small btn-ghost" onClick={click(() => openLeaderboard())}>
+              🏆 Leaderboards
             </button>
             <button className="btn btn-small btn-ghost" onClick={click(() => setModal("about"))}>
               📚 About &amp; Sources

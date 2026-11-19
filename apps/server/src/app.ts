@@ -6,11 +6,15 @@ import { extname, join, normalize, resolve, sep } from "node:path";
 import { Server } from "socket.io";
 import type { ClientToServerEvents, ServerToClientEvents } from "@sm/shared";
 import { SocketGateway, type GatewayOptions } from "./socketGateway";
+import { LeaderboardService } from "./leaderboard";
+import { LEADERBOARD_DIFFICULTIES, LEADERBOARD_MODES, type Difficulty, type LeaderboardMode } from "@sm/shared";
 
 export interface StartOptions extends GatewayOptions {
   /** Comma-separated allowed origins; defaults to process.env.CLIENT_ORIGIN. */
   clientOrigin?: string;
   sweepIntervalMs?: number;
+  /** Leaderboard service (tests pass their own). */
+  leaderboard?: LeaderboardService;
   /** Directory of the built web client to serve (single-service deploy). null disables; undefined auto-detects. */
   staticDir?: string | null;
 }
@@ -90,6 +94,7 @@ export interface RunningServer {
   port: number;
   close: () => Promise<void>;
   gateway: SocketGateway;
+  leaderboard: LeaderboardService;
 }
 
 const LOCALHOST_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/;
@@ -114,12 +119,18 @@ export async function startServer(port: number, opts: StartOptions = {}): Promis
   const isAllowed = makeOriginCheck(opts.clientOrigin ?? process.env.CLIENT_ORIGIN, process.env.NODE_ENV === "production");
 
   const staticDir = opts.staticDir === undefined ? findStaticDir() : opts.staticDir;
+  const leaderboard = opts.leaderboard ?? new LeaderboardService(opts.log ?? ((l) => console.log(l)));
+  await leaderboard.init();
 
   const http = createServer((req: IncomingMessage, res: ServerResponse) => {
     const path = (req.url ?? "/").split("?")[0];
+    if (path.startsWith("/api/")) {
+      void handleApi(req, res, path, leaderboard, isAllowed);
+      return;
+    }
     if (req.method === "GET" && path === "/health") {
       res.writeHead(200, { "content-type": "application/json", "access-control-allow-origin": "*" });
-      res.end(JSON.stringify({ ok: true }));
+      res.end(JSON.stringify({ ok: true, leaderboard: leaderboard.storage }));
       return;
     }
     if ((req.method === "GET" || req.method === "HEAD") && staticDir) {
@@ -145,7 +156,12 @@ export async function startServer(port: number, opts: StartOptions = {}): Promis
     maxHttpBufferSize: 64 * 1024,
   });
 
-  const gateway = new SocketGateway(io, opts);
+  const gateway = new SocketGateway(io, {
+    ...opts,
+    onMatchFinished: (state) => {
+      void leaderboard.recordCoop(state).catch(() => undefined);
+    },
+  });
   const sweep = setInterval(() => gateway.sweep(), opts.sweepIntervalMs ?? 5_000);
   sweep.unref();
 
@@ -169,5 +185,74 @@ export async function startServer(port: number, opts: StartOptions = {}): Promis
     });
   };
 
-  return { port: actualPort, close, gateway };
+  return { port: actualPort, close, gateway, leaderboard };
+}
+
+// ---------------------------------------------------------------- leaderboard HTTP API
+const MAX_BODY = 300 * 1024;
+
+function readJson(req: IncomingMessage): Promise<unknown> {
+  return new Promise((resolveBody, reject) => {
+    let size = 0;
+    const chunks: Buffer[] = [];
+    req.on("data", (c: Buffer) => {
+      size += c.length;
+      if (size > MAX_BODY) {
+        reject(new Error("too large"));
+        req.destroy();
+        return;
+      }
+      chunks.push(c);
+    });
+    req.on("end", () => {
+      try {
+        resolveBody(JSON.parse(Buffer.concat(chunks).toString("utf8")));
+      } catch {
+        reject(new Error("bad json"));
+      }
+    });
+    req.on("error", reject);
+  });
+}
+
+async function handleApi(
+  req: IncomingMessage,
+  res: ServerResponse,
+  path: string,
+  lb: LeaderboardService,
+  isAllowed: (origin: string | undefined) => boolean,
+): Promise<void> {
+  const origin = req.headers.origin;
+  const headers: Record<string, string> = { "content-type": "application/json", "cache-control": "no-store" };
+  if (origin && isAllowed(origin)) {
+    headers["access-control-allow-origin"] = origin;
+    headers["access-control-allow-methods"] = "GET, POST, OPTIONS";
+    headers["access-control-allow-headers"] = "content-type";
+    headers["vary"] = "origin";
+  }
+  const send = (status: number, body: unknown) => {
+    res.writeHead(status, headers);
+    res.end(JSON.stringify(body));
+  };
+  try {
+    if (req.method === "OPTIONS") return send(204, {});
+    if (req.method === "GET" && path === "/api/leaderboard") {
+      const q = new URL(req.url ?? "/", "http://x").searchParams;
+      const mode = q.get("mode") as LeaderboardMode;
+      const difficulty = q.get("difficulty") as Difficulty;
+      if (!LEADERBOARD_MODES.includes(mode) || !LEADERBOARD_DIFFICULTIES.includes(difficulty)) return send(400, { ok: false, reason: "bad board" });
+      return send(200, await lb.board(mode, difficulty));
+    }
+    if (req.method === "POST" && path === "/api/leaderboard/solo") {
+      const body = await readJson(req).catch(() => null);
+      if (body === null) return send(400, { ok: false, reason: "Invalid request." });
+      const fwd = String(req.headers["x-forwarded-for"] ?? "").split(",")[0].trim();
+      const client = fwd || req.socket.remoteAddress || "unknown";
+      const result = await lb.submitSolo(body, client);
+      return send(result.ok ? 200 : 422, result);
+    }
+    return send(404, { ok: false });
+  } catch (err) {
+    return send(500, { ok: false, reason: err instanceof Error ? err.message : "server error" });
+  }
 }

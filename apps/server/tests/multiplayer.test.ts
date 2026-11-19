@@ -94,7 +94,7 @@ function roomOf(res: AckRes<RoomState>): RoomState {
 describe("multiplayer server", () => {
   it("serves /health", async () => {
     const res = await fetch(`${url}/health`);
-    expect(await res.json()).toEqual({ ok: true });
+    expect(await res.json()).toMatchObject({ ok: true, leaderboard: expect.any(String) });
   });
 
   it("uses sessionId as playerId and replaces invalid ids", async () => {

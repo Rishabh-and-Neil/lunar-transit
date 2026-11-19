@@ -10,6 +10,7 @@ import { GameScreen } from "./screens/GameScreen";
 import { Results } from "./screens/Results";
 import { PersonalBestsModal } from "./screens/PersonalBests";
 import { AboutModal } from "./screens/About";
+import { LeaderboardModal } from "./screens/Leaderboard";
 import { TutorialOverlay } from "./screens/Tutorial";
 import { FirstVisitWelcome } from "./screens/Welcome";
 import { MusicToggle, MuteToggle } from "./hud/ui";
@@ -114,6 +115,7 @@ export function App() {
       {tutorial && <TutorialOverlay />}
       {modal === "bests" && <PersonalBestsModal onClose={() => setModal(null)} />}
       {modal === "about" && <AboutModal onClose={() => setModal(null)} />}
+      {modal === "leaderboard" && <LeaderboardModal onClose={() => setModal(null)} />}
       {screen === "menu" && !tutorial && <FirstVisitWelcome />}
       <div className="global-controls">
         <p

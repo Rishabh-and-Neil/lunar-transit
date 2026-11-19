@@ -3,6 +3,8 @@ export * from "./protocol";
 export * from "./config";
 export * from "./tasks/definitions";
 export * from "./simulation/engine";
+export * from "./simulation/replay";
+export * from "./leaderboard";
 export * from "./data";
 export { generateTask, regionId, LUNAR_SITES } from "./tasks/generator";
 export { validateSubmission, submissionFromSolution } from "./tasks/validators";

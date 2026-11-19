@@ -14,6 +14,7 @@ import { recordFromSnapshot } from "../state/personalBests";
 import { renderBridge } from "../state/renderBridge";
 import { playSfx } from "../audio/sfx";
 import { LocalTransport } from "./localTransport";
+import { fetchBoard, submitSoloRun } from "./leaderboard";
 import { SocketTransport, getSessionId, type SocketHandlers } from "./socket";
 import { getActiveTransport, setActiveTransport, type TransportHandlers } from "./transport";
 
@@ -51,6 +52,7 @@ function finishMatch(snap: PublicMatchSnapshot): void {
     recordedMatches.add(snap.id);
     const pb = recordFromSnapshot(snap);
     set({ result: { matchId: snap.id, outcome: snap.outcome, pb } });
+    void reportToLeaderboard(snap);
   }
   if (snap.tutorial) return; // tutorial overlay handles the ending
   const s = get();
@@ -63,6 +65,35 @@ function finishMatch(snap: PublicMatchSnapshot): void {
     const cur = get();
     if (cur.snapshot?.id === matchId && cur.transportKind !== null) set({ screen: "results" });
   }, delay);
+}
+
+/** Solo: send the run's replay for server verification. Co-op: the server already recorded it; look up the rank. */
+async function reportToLeaderboard(snap: PublicMatchSnapshot): Promise<void> {
+  const o = snap.outcome;
+  if (snap.tutorial || !o || (o.kind !== "solo-complete" && o.kind !== "coop-complete")) {
+    set({ lbSubmit: { status: "idle" } });
+    return;
+  }
+  set({ lbSubmit: { status: "pending" } });
+  if (o.kind === "solo-complete") {
+    const t = getActiveTransport();
+    if (!(t instanceof LocalTransport)) return void set({ lbSubmit: { status: "error", reason: "Run not recorded." } });
+    const res = await submitSoloRun(t.getRunRecord());
+    if (get().result?.matchId !== snap.id) return; // player moved on
+    set({ lbSubmit: res.ok ? { status: "ok", rank: res.rank ?? null, entryId: res.entry?.id } : { status: "error", reason: res.reason ?? "Not accepted." } });
+    return;
+  }
+  // co-op: give the server a moment to store it, then find our team on the board
+  await new Promise((r) => setTimeout(r, 800));
+  try {
+    const board = await fetchBoard("coop", snap.difficulty);
+    const names = snap.players.map((p) => p.name).sort().join("|");
+    const i = board.entries.findIndex((e) => e.timeMs === o.totalMs && [...e.names].sort().join("|") === names);
+    if (get().result?.matchId !== snap.id) return;
+    set({ lbSubmit: { status: "ok", rank: i >= 0 ? i + 1 : null, entryId: i >= 0 ? board.entries[i].id : undefined } });
+  } catch {
+    set({ lbSubmit: { status: "error", reason: "Couldn't reach the leaderboard server." } });
+  }
 }
 
 function onSnapshot(snap: PublicMatchSnapshot): void {

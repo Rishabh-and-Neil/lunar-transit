@@ -4,7 +4,19 @@ import type { Difficulty, GameMode, MatchOutcome, PublicMatchSnapshot, PublicTas
 import type { RecordOutcome } from "./personalBests";
 
 export type Screen = "menu" | "lobby" | "preparation" | "loading" | "game" | "results";
-export type Modal = "bests" | "about" | null;
+export type Modal = "bests" | "about" | "leaderboard" | null;
+
+export interface LeaderboardView {
+  mode: "solo" | "coop";
+  difficulty: Difficulty;
+}
+
+/** Where this match's time stands on the global leaderboard. */
+export type LeaderboardSubmit =
+  | { status: "idle" }
+  | { status: "pending" }
+  | { status: "ok"; rank: number | null; entryId?: string }
+  | { status: "error"; reason: string };
 export type ConnectionStatus = "idle" | "connecting" | "connected" | "reconnecting" | "error";
 
 export interface PendingCommand {
@@ -58,6 +70,10 @@ export interface GameStoreState {
   snapshotAt: number;
   /** Task instances pushed separately by the server (task:assigned), keyed by assignedId. */
   assignedTasks: Record<string, PublicTaskInstance>;
+  /** Board shown in the leaderboard modal. */
+  leaderboardView: LeaderboardView;
+  /** Leaderboard status of the last finished match. */
+  lbSubmit: LeaderboardSubmit;
   pending: Record<string, PendingCommand>;
   result: MatchResultInfo | null;
 
@@ -92,6 +108,8 @@ const initial: GameStoreState = {
   snapshot: null,
   snapshotAt: 0,
   assignedTasks: {},
+  leaderboardView: { mode: "solo", difficulty: "normal" },
+  lbSubmit: { status: "idle" },
   pending: {},
   result: null,
   toasts: [],
@@ -111,6 +129,19 @@ export function setScreen(screen: Screen): void {
 
 export function setModal(modal: Modal): void {
   set({ modal });
+}
+
+/** Opens the leaderboard on a given board (defaults to the last one viewed). */
+export function openLeaderboard(view?: Partial<LeaderboardView>): void {
+  set((s) => ({ modal: "leaderboard", leaderboardView: { ...s.leaderboardView, ...view } }));
+}
+
+export function setLeaderboardView(view: Partial<LeaderboardView>): void {
+  set((s) => ({ leaderboardView: { ...s.leaderboardView, ...view } }));
+}
+
+export function setLbSubmit(lbSubmit: LeaderboardSubmit): void {
+  set({ lbSubmit });
 }
 
 export function setPlayerName(name: string): void {

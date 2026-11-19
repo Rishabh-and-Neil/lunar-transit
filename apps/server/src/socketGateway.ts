@@ -20,6 +20,8 @@ export interface GatewayOptions {
   /** Rooms with no connected players are removed after this long. */
   emptyRoomTtlMs?: number;
   finishedRetentionMs?: number;
+  /** Called with the final state whenever a match finishes (used for the co-op leaderboard). */
+  onMatchFinished?: (state: import("@sm/shared").MatchState) => void;
   /** A player who drops mid-match has this long to reconnect before the match is cancelled. */
   disconnectGraceMs?: number;
   log?: (line: string) => void;
@@ -64,6 +66,7 @@ export class SocketGateway {
       finishedRetentionMs: opts.finishedRetentionMs,
       log: this.log,
       // Once the countdown starts, only returning players may (re)join the room.
+      onFinished: (entry) => opts.onMatchFinished?.(entry.state),
       onCountdown: (entry) => {
         const room = this.rooms.get(entry.roomCode);
         if (room && room.matchId === entry.id) room.locked = true;

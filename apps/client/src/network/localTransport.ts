@@ -12,6 +12,8 @@ import {
   type EquipmentId,
   type MatchState,
   type PlayerCommand,
+  type RecordedCommand,
+  type SoloRunRecord,
 } from "@sm/shared";
 import type { CommandInput, GameTransport, TransportHandlers } from "./transport";
 import { newCommandId } from "./commands";
@@ -38,6 +40,8 @@ export class LocalTransport implements GameTransport {
   private lastEmitAt = 0;
   private timeScale = 1;
   private paused = false;
+  /** Every command with the engine tick it was applied at, for leaderboard replay verification. */
+  private log: RecordedCommand[] = [];
   private disposed = false;
 
   constructor(
@@ -98,12 +102,19 @@ export class LocalTransport implements GameTransport {
       next = r.state;
     }
     this.state = next;
+    this.log = loadout.map((equipmentId) => ({ tick: 0, cmd: { type: "PURCHASE_EQUIPMENT", equipmentId } }));
     this.emit();
+  }
+
+  /** The replayable record of this run (seed + commands), sent to the server for leaderboard verification. */
+  getRunRecord(): SoloRunRecord {
+    return { v: 1, seed: this.state.seed, difficulty: this.opts.difficulty, name: this.opts.name, commands: [...this.log] };
   }
 
   send(command: CommandInput, commandId: string): void {
     if (this.disposed) return;
     const full = { ...command, commandId, playerId: this.playerId } as PlayerCommand;
+    this.log.push({ tick: this.ticks, cmd: { ...command } as RecordedCommand["cmd"] });
     let result;
     try {
       result = applyCommand(this.state, full);
