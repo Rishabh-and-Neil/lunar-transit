@@ -158,8 +158,8 @@ export async function startServer(port: number, opts: StartOptions = {}): Promis
 
   const gateway = new SocketGateway(io, {
     ...opts,
-    onMatchFinished: (state) => {
-      void leaderboard.recordCoop(state).catch(() => undefined);
+    onMatchFinished: (state, clientIdOf) => {
+      void leaderboard.recordCoop(state, clientIdOf).catch(() => undefined);
     },
   });
   const sweep = setInterval(() => gateway.sweep(), opts.sweepIntervalMs ?? 5_000);

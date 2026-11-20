@@ -1,6 +1,6 @@
 // Shared leaderboard types for the HTTP API (server) and the leaderboard screen (client).
 import { z } from "zod";
-import { zDifficulty, zName } from "./protocol";
+import { zClientId, zDifficulty, zName } from "./protocol";
 import type { Difficulty } from "./types";
 
 export type LeaderboardMode = "solo" | "coop";
@@ -10,6 +10,7 @@ export const LEADERBOARD_DIFFICULTIES: Difficulty[] = ["easy", "normal", "hard"]
 export const LEADERBOARD_KEEP = 100;
 export const LEADERBOARD_SHOW = 25;
 
+/** Each player (one browser) has a single entry per board: their best. */
 export interface LeaderboardEntry {
   id: string;
   mode: LeaderboardMode;
@@ -35,6 +36,8 @@ export interface LeaderboardBoard {
 
 export interface SubmitResult {
   ok: boolean;
+  /** The run was fine but slower than this player's best, which stays on the board (entry/rank describe that best). */
+  kept?: boolean;
   reason?: string;
   entry?: LeaderboardEntry;
   /** 1-based rank on its board, or null if it did not make the kept list. */
@@ -53,6 +56,7 @@ export const zSavedBest = z.object({
   mode: z.enum(["solo", "coop"]),
   difficulty: zDifficulty,
   name: zName,
+  clientId: zClientId.optional(),
   totalMs: z.number().int().min(SAVED_BEST_LIMITS.minMs).max(SAVED_BEST_LIMITS.maxMs),
   /** When the best was set (epoch ms); must be before leaderboards launched. */
   setAt: z.number().int().min(Date.UTC(2026, 0, 1)).max(LEADERBOARD_LAUNCH_AT),

@@ -59,6 +59,8 @@ export interface ServerToClientEvents {
 export interface HandshakeAuth {
   sessionId: string;
   name?: string;
+  /** Lasting per-browser id (localStorage); groups leaderboard results by player. Never shown to others. */
+  clientId?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -68,6 +70,7 @@ const commandId = z.string().min(1).max(64);
 export const zDifficulty = z.enum(["easy", "normal", "hard"]);
 export const zMpMode = z.enum(["1v1", "coop"]);
 export const zName = z.string().trim().min(1).max(20);
+export const zClientId = z.string().regex(/^[A-Za-z0-9-]{8,64}$/);
 
 export const zRoomCreate = z.object({ mode: zMpMode, name: zName, difficulty: zDifficulty });
 export const zRoomJoin = z.object({ code: z.string().trim().min(3).max(12), name: zName });

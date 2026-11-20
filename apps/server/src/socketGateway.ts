@@ -21,7 +21,8 @@ export interface GatewayOptions {
   emptyRoomTtlMs?: number;
   finishedRetentionMs?: number;
   /** Called with the final state whenever a match finishes (used for the co-op leaderboard). */
-  onMatchFinished?: (state: import("@sm/shared").MatchState) => void;
+  /** clientIdOf maps a player to their browser's lasting id (for one-entry-per-player leaderboards). */
+  onMatchFinished?: (state: import("@sm/shared").MatchState, clientIdOf: (playerId: string) => string | undefined) => void;
   /** A player who drops mid-match has this long to reconnect before the match is cancelled. */
   disconnectGraceMs?: number;
   log?: (line: string) => void;
@@ -38,6 +39,7 @@ interface Session {
   playerId: string;
   name: string;
   socket: GameSocket;
+  clientId?: string;
 }
 
 export class SocketGateway {
@@ -66,7 +68,7 @@ export class SocketGateway {
       finishedRetentionMs: opts.finishedRetentionMs,
       log: this.log,
       // Once the countdown starts, only returning players may (re)join the room.
-      onFinished: (entry) => opts.onMatchFinished?.(entry.state),
+      onFinished: (entry) => opts.onMatchFinished?.(entry.state, (pid) => this.sessions.get(pid)?.clientId),
       onCountdown: (entry) => {
         const room = this.rooms.get(entry.roomCode);
         if (room && room.matchId === entry.id) room.locked = true;
@@ -107,7 +109,9 @@ export class SocketGateway {
     const prev = this.sessions.get(playerId);
     const name = parsedName.success ? parsedName.data : prev?.name ?? `Player-${playerId.slice(0, 4)}`;
 
-    const session: Session = { playerId, name, socket };
+    const rawClient = field(auth, "clientId");
+    const clientId = typeof rawClient === "string" && /^[A-Za-z0-9-]{8,64}$/.test(rawClient) ? rawClient : prev?.clientId;
+    const session: Session = { playerId, name, socket, clientId };
     this.sessions.set(playerId, session);
     if (prev && prev.socket.id !== socket.id && prev.socket.connected) prev.socket.disconnect(true);
 

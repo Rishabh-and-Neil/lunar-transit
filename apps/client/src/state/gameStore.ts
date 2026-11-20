@@ -15,7 +15,8 @@ export interface LeaderboardView {
 export type LeaderboardSubmit =
   | { status: "idle" }
   | { status: "pending" }
-  | { status: "ok"; rank: number | null; entryId?: string }
+  /** kept: this run was slower than the player's best, which (with this time) stays on the board. */
+  | { status: "ok"; rank: number | null; entryId?: string; kept?: number }
   | { status: "error"; reason: string };
 export type ConnectionStatus = "idle" | "connecting" | "connected" | "reconnecting" | "error";
 

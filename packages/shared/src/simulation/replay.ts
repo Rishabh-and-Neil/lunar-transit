@@ -3,7 +3,7 @@
 // seed + commands through the same engine must reproduce the same outcome.
 import { z } from "zod";
 import { TIMING } from "../config/timing";
-import { zName, zDifficulty } from "../protocol";
+import { zClientId, zName, zDifficulty } from "../protocol";
 import type { Difficulty, MatchState, PlayerCommand } from "../types";
 import { advance, allPlayersReady, applyCommand, createMatch, startCountdown } from "./engine";
 
@@ -15,6 +15,8 @@ export interface SoloRunRecord {
   seed: number;
   difficulty: Difficulty;
   name: string;
+  /** The browser's lasting player id: one leaderboard entry per player per board. */
+  clientId?: string;
   commands: RecordedCommand[];
 }
 
@@ -29,6 +31,7 @@ export const zSoloRunRecord = z.object({
   seed: z.number().int().min(0).max(2 ** 32),
   difficulty: zDifficulty,
   name: zName,
+  clientId: zClientId.optional(),
   commands: z
     .array(
       z.object({

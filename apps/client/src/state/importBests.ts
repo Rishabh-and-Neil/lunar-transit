@@ -2,6 +2,7 @@
 // On start-up we upload each of them once; runs finished since then are submitted as they happen.
 import { LEADERBOARD_LAUNCH_AT } from "@sm/shared";
 import { importSavedBest } from "../network/leaderboard";
+import { getClientId } from "../network/clientId";
 import { effectiveName } from "./gameStore";
 import { loadPersonalBests } from "./personalBests";
 
@@ -46,6 +47,7 @@ export async function uploadEarlierBests(): Promise<number> {
         mode: best.mode,
         difficulty: best.difficulty,
         name: effectiveName(),
+        clientId: getClientId(),
         totalMs: Math.round(best.totalMs),
         setAt,
         attachments: best.attachments ?? [],

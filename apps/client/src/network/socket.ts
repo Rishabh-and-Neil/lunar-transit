@@ -17,6 +17,8 @@ export const SERVER_URL: string =
   (import.meta.env.VITE_SERVER_URL as string | undefined) ||
   (import.meta.env.PROD && typeof window !== "undefined" ? window.location.origin : "http://localhost:3001");
 
+import { getClientId } from "./clientId";
+
 const SESSION_KEY = "lt.sessionId";
 
 /**
@@ -64,7 +66,7 @@ export class SocketTransport implements GameTransport {
     private handlers: SocketHandlers,
   ) {
     this._playerId = getSessionId();
-    const auth: HandshakeAuth = { sessionId: this._playerId, name };
+    const auth: HandshakeAuth = { sessionId: this._playerId, name, clientId: getClientId() };
     this.socket = io(SERVER_URL, {
       auth,
       transports: ["websocket", "polling"],
@@ -88,7 +90,7 @@ export class SocketTransport implements GameTransport {
 
   /** Updates the name sent on (re)connect handshakes. */
   setName(name: string): void {
-    const auth: HandshakeAuth = { sessionId: this._playerId, name };
+    const auth: HandshakeAuth = { sessionId: this._playerId, name, clientId: getClientId() };
     this.socket.auth = auth;
   }
 

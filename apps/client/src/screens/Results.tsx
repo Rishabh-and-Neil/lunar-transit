@@ -151,6 +151,13 @@ function LeaderboardRank({ mode, difficulty }: { mode: string; difficulty: Diffi
         <button className="btn btn-small btn-ghost" onClick={view}>View leaderboard</button>
       </div>
     );
+  if (lb.kept !== undefined)
+    return (
+      <div className="lb-result">
+        🏆 Your best of <b>{formatClock(lb.kept, true)}</b> stays on the board{lb.rank ? <> at <b>#{lb.rank}</b></> : null}
+        <button className="btn btn-small btn-ghost" onClick={view}>View leaderboard</button>
+      </div>
+    );
   return (
     <div className="lb-result">
       🏆 {lb.rank ? <>Global rank <b>#{lb.rank}</b> on {DIFFICULTY[difficulty].label}</> : <>Logged on the {DIFFICULTY[difficulty].label} leaderboard</>}
